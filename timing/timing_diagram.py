@@ -1,4 +1,6 @@
 # Run on https://wavedrom.com/editor.html
+import wavedrom
+svg = wavedrom.render("""
 {signal: [
   {name:'clk',         wave: 'P.......................'},
   {name:'packets_in_mmu',        wave: '9.......9.......7......', data: 'packet[0].header packet[0].data packet[1]' },
@@ -52,3 +54,5 @@
  },
   config: { hscale: 1.5 }
 }
+""")
+svg.saveas("timing.svg")
