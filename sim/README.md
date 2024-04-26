@@ -1,5 +1,5 @@
 # Specifications
-Default to 4 ingress ports, and 4 egress ports.
+Default to 4 ingress ports, and 4 egress ports. This specification is only for simulation and does not apply to the hardware design.
 
 # Software
 
@@ -128,9 +128,9 @@ There are 1024 control blocks. Each is structured as follows
 
 ## Scheduler
 
-The scheduler makes a scheduling decision according to the information that's send from 4 ingress ports.
+The scheduler makes a scheduling decision according to the information that's sent from 4 ingress ports.
 
-If there is not enabling, just send the sched_sel anywhere.
+If there is no enabling, just send the sched_sel anywhere.
 
 If there is enabling:
 #### Outputs
@@ -206,13 +206,13 @@ class.tick takes in class object that it send to. -->
 Which packet makes it (packet id number, checksum on, store the checksum)
 We probably don't want to store the entire packet, but just store the metadata, because half a MB will be pretty quick to fill up.
 
-## Does the egress need to communicate with ingress (i.e. do we need control crossbar?)
+## Does the egress need to communicate with ingress (i.e. do we need a control crossbar?)
 Just let the crossbar output an enable bit.
 
 ## Egress: It can be not OTF, but let 
 Dumb! Make them dumb and big, have them 
 test the latency, record some metrics.
-Add cycle cnt/time stamp, so that we know how long it takes to arraive (1 time stamp, 1 into the ingress time, 2 into the egress time) (attach it to the packet)
+Add cycle cnt/time stamp, so that we know how long it takes to arrive (1 time stamp, 1 into the ingress time, 2 into the egress time) (attach it to the packet)
 
 ## Heartbeat:
 * Every 8 cycles, there's a scheduling decision. The scheduling decision changes the pattern of the active sel of the crossbar; each cycle we put 32 bits on the crossbar, so there will be 32-bit * 8 = 32 bytes of data per egress that gets sent to the output every cycle.
@@ -226,71 +226,4 @@ Add cycle cnt/time stamp, so that we know how long it takes to arraive (1 time s
 ## All the state machines that we have:
 The packet Management Unit has a lot of state machines because our system only operates at a rate of 32-bit at a time.
 * When reading in the packets, we need to keep reading the packet until we have a complete dest MAC address, which needs to be managed by a state machine (or a counter).
-* When we're sending a packet, we send the packet by chunk, so the progress of sending a packet to the crossbar should also be a state machine. 
-
-
-<<<<<<< HEAD
-## Rethink dequeue and "busy_sending"
-The busy_sending signal should be set by the VOQ, since the VOQ initiates a dequeue->send packet.
-
-The busy_sending signal should be unset by the PMU, since the PMU is the actual unit that sends out the packet.
-
-Maybe we should combine the VOQ and the MMU.
-
-## Scheduler should not have an enable I think
-Because we need information on what should be active at any given cycle? If we were to do scheduler_enable, who should send it?
-
-## Timing seems to be a little off.
-What is a general approach to make sure the timing does not get messed up?
-
-
-## Should we assume that the software is much slower than the hardware?
-* If it is, then things does not get queued up, so what's the meaning of the switch?
-* It might be better just to generate the packets in hardware, and the software makes the switch programmable (like control the MAC to Port table, control how many ports it supports...)
-* If it's not, then we need finer granularity of state machines. Like I think we need to handle the case of when we're 
-
-## Should we keep the packet generation in hardware, and let software control the programmability of the switch?
-* For example, let the software control the mac-to-port table.
-* This is because I think packet gen in software does not necessarily make sense.
-  * If software speed >> hardware, then too many packets are going to be dropped
-  * If software speed << hardware, then the crossbar does not even make sense anymore.
-  * Find the right rate is hard, and I don't know which is more realistic.
-
-## What's a general way to do hardware? en or en+ack?
-Also, can we trust that memory have a "read_data_ready" output?
-
-## Rethink dequeue
-The busy_voq signal should come from the PMU, since the PMU is the actual unit that sends out the packet. (Set by PMU, unset by VOQ, but all output logic)
-
-## Scheduler is all combinatory?
-If it doesn't, then when do we do schedule_enable? (Yes, there's a heartbeat that drives the program)
-
-## Timing seems to be a little off. What is a general approach to make sure the timing does not get messed up?
-Just draw the timing diagram
-
-
-The scheduler takes one cycle to generate a scheduling decision, do that takes a cycle (probably)
-
-Most critical thing: The memory takes a cycle.
-
-Does enable come in at the same cycle?
-* If it's generated from the same source (like the packet gen), then it might need 2 cycles, if it's the crossbar then data comes from crossbar but the enable comes from scheduler, then you can do 1 cycle.
-
-You're getting a new port
-
-!!! 8 counters, because of what?
-
-3 cases:
-1. no new block
-2. start new block
-3. continue block
-4. start new packet
-5. end packet
-6. packet should be dropped
-
-
-3 block of the timing diagram
-1. new packet, 1 middle block, 1 end of packet.
-
-Using some time diagram softwares (Be discreet)
-
+* When we're sending a packet, we send the packet by chunk, so the progress of sending a packet to the crossbar should also be a state machine.
