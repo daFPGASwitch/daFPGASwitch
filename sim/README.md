@@ -1,7 +1,7 @@
 # Specifications
 Default to 4 ingress ports, and 4 egress ports. This specification is only for simulation and does not apply to the hardware design.
 
-# Software
+# Design
 
 Assumption: The software's packet comes in at a lower rate than the hardware clk cycle.
 
@@ -13,7 +13,7 @@ We also need a register to send new_packet_enable and packet_enable. So we will 
 ### Packet Gen: (In software)
 Send packets to Ingress ports at a rate that we control.
 
-# Ingress
+## Ingress
 
 Ingress ports consist of 3 units: Packet Management Unit, MAC to Port Number Translation Unit (TODO), and Virtual Output Queue Unit.
 
@@ -184,44 +184,12 @@ It has a control logic and an egress_buffer.
 * read_data to software
 * read_en to software
 
-<!-- out:
-* 
-Software:
-register:
-* 2 registers to recv packets -->
 
-<!-- tick of dataMemory:
-read_data = if (self.read_en) then self.read_data else None
-data_crossbar(read_data)
-ctrl_crossbar(read_en)
-
-Basic simulation principles
-Every input wire is a local variable
-memory blocks are local variable
-every function that's in "send" calls the sendee's class-specific function in tick
-every class should define all functions listed in recv
-class.tick takes in class object that it send to. -->
-
-## How are we gonna make the packet decoding robust? Given that we might have data loss (need checksum bit?)
-Which packet makes it (packet id number, checksum on, store the checksum)
-We probably don't want to store the entire packet, but just store the metadata, because half a MB will be pretty quick to fill up.
-
-## Does the egress need to communicate with ingress (i.e. do we need a control crossbar?)
-Just let the crossbar output an enable bit.
-
-## Egress: It can be not OTF, but let 
-Dumb! Make them dumb and big, have them 
-test the latency, record some metrics.
-Add cycle cnt/time stamp, so that we know how long it takes to arrive (1 time stamp, 1 into the ingress time, 2 into the egress time) (attach it to the packet)
+# Notices:
 
 ## Heartbeat:
 * Every 8 cycles, there's a scheduling decision. The scheduling decision changes the pattern of the active sel of the crossbar; each cycle we put 32 bits on the crossbar, so there will be 32-bit * 8 = 32 bytes of data per egress that gets sent to the output every cycle.
 
-## Packet generation problem
-* Should we generate everything all at once, and let the hardware send it, or hw and sw interface communicate on the fly?
-
-## Memory problem
-* Can we assume the data's gonna be sent out after one cycle? I think yes
 
 ## All the state machines that we have:
 The packet Management Unit has a lot of state machines because our system only operates at a rate of 32-bit at a time.
