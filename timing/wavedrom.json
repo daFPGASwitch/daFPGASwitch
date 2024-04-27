@@ -1,6 +1,3 @@
-# Run on https://wavedrom.com/editor.html
-import wavedrom
-svg = wavedrom.render("""
 {signal: [
   {name:'clk',         wave: 'P...............................|'}, 
   ['Ingress',
@@ -131,5 +128,3 @@ svg = wavedrom.render("""
   {},
   {name: 'ack', wave: '1.....|01.'} */
 ]}
-""")
-svg.saveas("timing.svg")
