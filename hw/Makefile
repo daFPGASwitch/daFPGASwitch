@@ -2,12 +2,13 @@
 
 SVFILES = sched.sv
 
-sched : obj_dir/Vsched
-	(obj_dir/Vsched && echo "SUCCESS") || echo "FAILED"
+# Run Verilator simulations
 
+sched.vcd : obj_dir/Vsched
+	obj_dir/Vsched
 
 obj_dir/Vsched : sched.sv verilator/sched.cpp
-	verilator -Wall -cc sched.sv -exe verilator/sched.cpp \
+	verilator -trace -Wall -cc sched.sv -exe verilator/sched.cpp \
 		-top-module sched
 	cd obj_dir && make -j -f Vsched.mk
 
