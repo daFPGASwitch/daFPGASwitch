@@ -13,7 +13,7 @@ module simple_dual_port_mem #(
   always_ff @(posedge clk) begin
     if (write) begin
       mem[wa] <= d;
-	end
+	  end
     q <= mem[ra];
   end 
 	

@@ -6,7 +6,7 @@
 
 unsigned char input_voq_empty[] = {0b1110, 0b0001, 0b0011, 0b1111, 0b0000, 0b1110, 0b0111};
 
-unsigned char input_idx[] = {3, 3, 1, 2, 1, 1, 0};
+unsigned char input_start_voq_num[] = {3, 3, 1, 2, 1, 1, 0};
 
 unsigned char output_all_empty[] = {0, 0, 0, 1, 0, 0, 0};
 
@@ -22,11 +22,11 @@ int main(int argc, const char ** argv, const char ** env) {
 
   for (int i = 0 ; i < 6 ; i++) {
     dut->voq_empty = input_voq_empty[i];
-    dut->idx = input_idx[i];
+    dut->start_voq_num = input_start_voq_num[i];
     dut->eval();
     std::bitset<4> x(dut->voq_empty);
     std::cout << "voq_empty: " << x << '\n';
-    std::cout << "idx: " << (int) dut->idx << '\n';
+    std::cout << "start_voq_num: " << (int) dut->start_voq_num << '\n';
     
     if (dut->all_empty == output_all_empty[i] && (dut->first_non_empty_num == output_first_non_empty_num[i] || dut->all_empty == 1))
         std::cout << " OK" << '\n';
