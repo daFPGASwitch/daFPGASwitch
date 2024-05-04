@@ -35,10 +35,11 @@ module sched (
   * Busy ports need to be handled first.
   */
 
-  logic assigning_new; // If the scheduler is in the process of assigning new packet
-  logic [3:0] ingress_done; // Whether each ingress is done
+  // If the scheduler is in the process of assigning new packet
+  // 0: not assigning; 1~4: assigning.
+  logic [2:0] assigning_new;
+
   logic [3:0] ingress_enable; // the enable signal ready to be passed to sched_sel_en when ingress_done = 4'b1111
-  // logic [3:0] egress_done; // Whether each egress is done
   
   // For RR
   logic [1:0] start_ingress_idx; // Which ingress has the highest priority in this cycle
@@ -76,21 +77,20 @@ module sched (
       // reset sched_sel_en
       sched_sel_en <= 0;
       // all the busy ingress ports are automatically assigned.
-      ingress_done <= 0;
       ingress_enable <= 0;
       // start to assign ports for non-empty 
-      assigning_new <= 1'b1;
+      assigning_new <= 1;
       voq_picked <= busy_egress_mask;
       curr_ingress_idx <= start_ingress_idx; // Start with start_ingress_idx
-    end else if (ingress_done == 4'b1111) begin // alternatively, if we manage to go back to start_ingress_idx
+    end else if (assigning_new > 4) begin // alternatively, if we manage to go back to start_ingress_idx
       // If all are assigned, we're going start enabling
       sched_sel_en <= ingress_enable;
       // Nex time it should start with another index.
       start_ingress_idx <= (start_ingress_idx == 3) ? 0 : start_ingress_idx + 1;
-      assigning_new <= 1'b0;
-    end else if (assigning_new) begin
+      assigning_new <= 0;
+    end else if (assigning_new >= 1 && assigning_new <= 4) begin
       curr_ingress_idx <= (curr_ingress_idx == 3) ? 0 : curr_ingress_idx + 1;
-      ingress_done[curr_ingress_idx] <= 1'b1;
+      assigning_new <= assigning_new + 1;
       if (!is_busy[curr_ingress_idx]) begin
         if (!no_available_voq) begin
           ingress_enable[curr_ingress_idx] <= 1'b1;
