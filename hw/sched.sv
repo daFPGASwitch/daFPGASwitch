@@ -32,7 +32,10 @@ module sched (
   /*
   Notice: 
   * Beware of the possiblity of input (voq_empty for example) change during the process. 
+    - Possibly, use some local variables to save the inputs.
+    - Or, let the ingress be in charge of only updating the signal when sched_en.
   * Busy ports need to be handled first.
+  * All the data need to be prepared before sched_enable. So at T-1 prepare input, and at T sched_enable.
   */
 
   // If the scheduler is in the process of assigning new packet
@@ -83,12 +86,14 @@ module sched (
       assigning_new <= 1;
       voq_picked <= busy_egress_mask;
       curr_ingress_idx <= start_ingress_idx; // Start with start_ingress_idx
-    end else if (assigning_new > 4) begin // alternatively, if we manage to go back to start_ingress_idx
+    end else if (assigning_new == 5) begin // alternatively, if we manage to go back to start_ingress_idx
       // If all are assigned, we're going start enabling
       sched_sel_en <= ingress_enable;
       // Nex time it should start with another index.
       start_ingress_idx <= (start_ingress_idx == 3) ? 0 : start_ingress_idx + 1;
-      assigning_new <= 0;
+      assigning_new <= 6;
+    end else if (assigning_new == 6) begin
+      sched_sel_en <= 0;
     end else if (assigning_new >= 1 && assigning_new <= 4) begin
       curr_ingress_idx <= (curr_ingress_idx == 3) ? 0 : curr_ingress_idx + 1;
       assigning_new <= assigning_new + 1;

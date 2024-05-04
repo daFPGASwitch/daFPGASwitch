@@ -5,11 +5,11 @@
 
 using namespace std;
 
-unsigned short is_busy[] = {0b1110, 0b1110, 0b0000};
+unsigned short is_busy[] = {0b1110, 0b1110, 0b1110, 0b0000};
 
-unsigned short busy_voq_num[] = {0b11100111, 0b11100111, 0b00000000};
+unsigned short busy_voq_num[] = {0b11100111, 0b11100111, 0b11100111, 0b00000000};
 
-unsigned short voq_empty[] = {0b0000000000001110, 0b0000000000000000, 0b1011011111101101};
+unsigned short voq_empty[] = {0b0000000000001110, 0b0000000000000000, 0b0000000000001111, 0b1011011111101101};
 
 
 int main(int argc, const char ** argv, const char ** env) {
@@ -18,7 +18,7 @@ int main(int argc, const char ** argv, const char ** env) {
   // Treat the argument on the command-line as the place to start
   int n;
   if (argc > 1 && argv[1][0] != '+') n = atoi(argv[1]);
-  else n = 3; // Default
+  else n = 4; // Default
 
   Vsched * dut = new Vsched;  // Instantiate the sched module
 
@@ -42,22 +42,23 @@ int main(int argc, const char ** argv, const char ** env) {
   for (time = 0 ; time < 1000; time += 10) {
     std::cout << "time: " << time << std::endl; 
     dut->clk = ((time % 20) >= 10) ? 1 : 0; // Simulate a 50 MHz clock
-    if ((time % 160) < 30 && (time % 160) >= 10) {
+    if ((time % 160) == 20) {
       if (iter < n) {
-        if ((time % 160) == 20) {
-          iter += 1;
-          cout << iter << endl;
-        }
-        dut->sched_en = 1;
+        dut->sched_en = 0;
         dut->is_busy = is_busy[iter];
         dut->busy_voq_num = busy_voq_num[iter];
         dut->voq_empty = voq_empty[iter];
-      } else {
-        dut->sched_en = 0;
       }
-    }
-    else {
+    } else if ((time % 160) == 30 || (time % 160) == 40) {
+      if (iter < n) {
+        dut->sched_en = 1;
+      }
+    } else {
       dut->sched_en = 0;
+      if ((time % 160) == 50) {
+          iter += 1;
+          cout << iter << endl;
+      }
     }
 
     dut->eval();     // Run the simulation for a cycle
