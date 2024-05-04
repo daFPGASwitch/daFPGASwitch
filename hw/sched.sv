@@ -30,7 +30,9 @@ module sched (
   */
 
   /*
-  Notice: Beware of the possiblity of input (voq_empty for example) change during the process. 
+  Notice: 
+  * Beware of the possiblity of input (voq_empty for example) change during the process. 
+  * Busy ports need to be handled first.
   */
 
   logic assigning_new; // If the scheduler is in the process of assigning new packet
@@ -48,10 +50,23 @@ module sched (
   logic [3:0] voq_picked; // is the voq/egress picked?
   logic no_available_voq; // Is the voqs/egress of the current ingress all empty/occupied by other?
   logic [1:0] voq_to_pick; // What is the voq_to_pick for the current ingress
+  logic [3:0] busy_egress_mask;
+
+  logic [2:0] i;
 
   always_comb begin
+    for (i = 0; i < 4; i = i + 1) begin
+      if (is_busy[i[1:0]] == 1'b1) begin
+        busy_egress_mask[busy_voq_num[(i << 1) +: 2]] = 1'b1;
+      end
+    end
     curr_in_2 = {1'b0, curr_ingress_idx} << 1;
-    curr_in_4 = {2'b0, curr_ingress_idx}<< 2; // * 4 is << 2
+    curr_in_4 = {2'b0, curr_ingress_idx} << 2; // * 4 is << 2
+  end
+
+  initial begin
+    start_ingress_idx = 0;
+    start_voq_num = 0;
   end
 
   always_ff @(posedge clk) begin
@@ -61,9 +76,11 @@ module sched (
       // reset sched_sel_en
       sched_sel_en <= 0;
       // all the busy ingress ports are automatically assigned.
-      // ingress_done <= is_busy; // redundant
+      ingress_done <= 0;
+      ingress_enable <= 0;
       // start to assign ports for non-empty 
       assigning_new <= 1'b1;
+      voq_picked <= busy_egress_mask;
       curr_ingress_idx <= start_ingress_idx; // Start with start_ingress_idx
     end else if (ingress_done == 4'b1111) begin // alternatively, if we manage to go back to start_ingress_idx
       // If all are assigned, we're going start enabling

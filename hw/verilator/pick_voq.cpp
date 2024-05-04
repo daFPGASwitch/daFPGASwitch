@@ -4,15 +4,15 @@
 #include <verilated.h>
 #include <bitset>
 
-unsigned char input_voq_empty[] = {0b1110, 0b0001, 0b0011, 0b1111, 0b0000, 0b1110, 0b0111, 0b0100, 0b0110};
+unsigned char input_voq_empty[] = {0b1110, 0b0001, 0b0011, 0b1111, 0b0000, 0b1110, 0b0111, 0b0100, 0b0110, 0b0000};
 
-unsigned char input_voq_picked[] = {0b1110, 0b0001, 0b0011, 0b1111, 0b0000, 0b1110, 0b0111, 0b1000, 0b1001};
+unsigned char input_voq_picked[] = {0b1110, 0b0001, 0b0011, 0b1111, 0b0000, 0b1110, 0b0111, 0b1000, 0b1001, 0b1111};
 
-unsigned char input_start_voq_num[] = {3, 3, 1, 2, 1, 1, 0, 2, 0};
+unsigned char input_start_voq_num[] = {3, 3, 1, 2, 1, 1, 0, 2, 0, 0};
 
-unsigned char output_no_available_voq[] = {0, 0, 0, 1, 0, 0, 0, 0, 1};
+unsigned char output_no_available_voq[] = {0, 0, 0, 1, 0, 0, 0, 0, 1, 1};
 
-unsigned char output_voq_to_pick[] = {0, 3, 2, 3, 1, 0, 3, 0, 0};
+unsigned char output_voq_to_pick[] = {0, 3, 2, 3, 1, 0, 3, 0, 0, 0};
 
 
 int main(int argc, const char ** argv, const char ** env) {
