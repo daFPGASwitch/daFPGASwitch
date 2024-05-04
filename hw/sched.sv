@@ -56,6 +56,7 @@ module sched (
   logic [2:0] i;
 
   always_comb begin
+    busy_egress_mask = 0; // This is important: busy_egress_mask need a way to start with all unoccupied.
     for (i = 0; i < 4; i = i + 1) begin
       if (is_busy[i[1:0]] == 1'b1) begin
         busy_egress_mask[busy_voq_num[(i << 1) +: 2]] = 1'b1;

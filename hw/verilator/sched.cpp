@@ -5,9 +5,9 @@
 
 using namespace std;
 
-unsigned char is_busy[] = {0b1110, 0b1110, 0b0000};
+unsigned short is_busy[] = {0b1110, 0b1110, 0b0000};
 
-unsigned char busy_voq_num[] = {0b11100111, 0b11100111, 0b00000000};
+unsigned short busy_voq_num[] = {0b11100111, 0b11100111, 0b00000000};
 
 unsigned short voq_empty[] = {0b0000000000001110, 0b0000000000000000, 0b1011011111101101};
 
@@ -50,8 +50,8 @@ int main(int argc, const char ** argv, const char ** env) {
         }
         dut->sched_en = 1;
         dut->is_busy = is_busy[iter];
-        dut->busy_voq_num = is_busy[iter];
-        dut->voq_empty = is_busy[iter];
+        dut->busy_voq_num = busy_voq_num[iter];
+        dut->voq_empty = voq_empty[iter];
       } else {
         dut->sched_en = 0;
       }
