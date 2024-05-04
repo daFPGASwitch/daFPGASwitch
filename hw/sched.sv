@@ -5,7 +5,7 @@ module sched (
     input logic [3:0] is_busy,
     input logic [7:0] busy_voq_num,
     input logic [15:0] voq_empty,
-    output logic [4:0] sched_sel_en, // passed by to ingress, to know which ingress should dequeue
+    output logic [3:0] sched_sel_en, // passed by to ingress, to know which ingress should dequeue
     output logic [7:0] sched_sel // passed by to ingress, to know which voq to dequeue
 );
 
@@ -49,21 +49,9 @@ module sched (
   logic no_available_voq; // Is the voqs/egress of the current ingress all empty/occupied by other?
   logic [1:0] voq_to_pick; // What is the voq_to_pick for the current ingress
 
-  logic [2:0] i; // For for loop
-
   always_comb begin
-    // Every busy ingress will continue to send out whatever's currently in the middle of the transit.
-    for (i = 0; i < 4; i = i + 1) begin
-        if (is_busy[i]) begin
-          logic [1:0] busy_port = busy_voq_num[(i + 1) << 1 : i << 1];
-          sched_sel[(i + 1) << 1 : i << 1] << (i * 2) = busy_port;
-          voq_picked[busy_port] = 1'b1;
-          ingress_done[i] = 1'b1;
-          ingress_enable[i] = 1'b1;
-        end
-    end
-    curr_in_2 = curr_ingress_idx << 1;
-    curr_in_4 = curr_ingress_idx << 2; // * 4 is << 2
+    curr_in_2 = {1'b0, curr_ingress_idx} << 1;
+    curr_in_4 = {2'b0, curr_ingress_idx}<< 2; // * 4 is << 2
   end
 
   always_ff @(posedge clk) begin
@@ -87,19 +75,26 @@ module sched (
       curr_ingress_idx <= (curr_ingress_idx == 3) ? 0 : curr_ingress_idx + 1;
       ingress_done[curr_ingress_idx] <= 1'b1;
       if (!is_busy[curr_ingress_idx]) begin
-        ingress_enable[curr_ingress_idx] <= !no_available_voq;
-        sched_sel[curr_in_2 + 2 : curr_in_2] <= voq_to_pick;
-        voq_picked[voq_to_pick] <= 1'b1;
-        start_voq_num[curr_in_2 + 2 : curr_in_2] <= 
-          (start_voq_num[curr_in_2 + 2 : curr_in_2] == 3) ? 0 : start_voq_num[curr_in_2 + 2 : curr_in_2] + 1; // Alternatively, we can choose not to move forward when no_available_voq.
+        if (!no_available_voq) begin
+          ingress_enable[curr_ingress_idx] <= 1'b1;
+          voq_picked[voq_to_pick] <= 1'b1;
+          sched_sel[curr_in_2 +: 2] <= voq_to_pick;
+          start_voq_num[curr_in_2 +: 2] <= 
+            (start_voq_num[curr_in_2 +: 2] == 3) ? 0 : start_voq_num[curr_in_2 +: 2] + 1; // Alternatively, we can choose not to move forward when no_available_voq.
+        end
+      end else begin
+        logic [1:0] busy_port = busy_voq_num[curr_in_2 +: 2];
+        ingress_enable[curr_ingress_idx] <= 1'b1;
+        sched_sel[curr_in_2 +: 2] <= busy_port;
+        voq_picked[busy_port] <= 1'b1;
       end
     end
   end
 
   // pick_voq will pick return the current ingress's first non empty voq to dequeue from.
   pick_voq pv (
-    .start_voq_num(start_voq_num[(curr_in_2 + 2): curr_in_2]),
-    .voq_empty(voq_empty[(curr_in_4 + 4): curr_in_4]),
+    .start_voq_num(start_voq_num[curr_in_2 +: 2]),
+    .voq_empty(voq_empty[curr_in_4 +: 4]),
     .voq_picked(voq_picked),
     .no_available_voq(no_available_voq),
     .voq_to_pick(voq_to_pick)
