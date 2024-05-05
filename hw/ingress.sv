@@ -79,7 +79,7 @@ module ingress (
 							new_block <= 1'b0;
 						end
 
-					if (new_blocki) begin
+					if (new_block) begin
 						/* Start writing to dmem */
 						curr_d_write <= (next_write * 8) + write_offset; 
 
@@ -111,7 +111,7 @@ module ingress (
 
 					/* Dequeue the VOQ */
 					start_idx0 = start_idx0 + 1;
-												
+					end
 				end
 	
 				0001:	begin
@@ -182,8 +182,10 @@ module ingress (
 
 				default: write_offset = 4'b0;	
 					
-			end
+			endcase
 				
 		end
+	end
 
-			
+
+endmodule
