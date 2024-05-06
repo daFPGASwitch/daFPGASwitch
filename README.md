@@ -1,2 +1,2 @@
 # daFPGASwitch
-A FPGA-based network switch.
+An FPGA-based, software-defined network switch.
