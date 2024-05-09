@@ -1,6 +1,8 @@
 .PHONY: sched lint
 
-SVFILES = sched.sv, pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv
+CMU_FILES = cmu.sv
+TOPMOD  = cmu
+SVFILES = cmu.sv sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv
 
 # Run Verilator simulations
 
@@ -12,8 +14,13 @@ default:
 	@echo "make vmu.vcd"
 	@echo "make lint"
 
-pick_voq : obj_dir/Vpick_voq
-	(obj_dir/Vpick_voq && echo "SUCCESS") || echo "FAILED"
+cmu.vcd : obj_dir/Vcmu
+	obj_dir/Vcmu
+
+obj_dir/Vcmu : $(CMU_FILES) verilator/cmu.cpp
+	verilator -trace -Wall -cc $(CMU_FILES) -exe verilator/cmu.cpp \
+		-top-module cmu
+	cd obj_dir && make -j -f Vcmu.mk
 
 sched.vcd : obj_dir/Vsched
 	obj_dir/Vsched
