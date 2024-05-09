@@ -1,6 +1,6 @@
 .PHONY: sched lint
 
-SVFILES = sched.sv, pick_voq.sv
+SVFILES = sched.sv, pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv
 
 # Run Verilator simulations
 
@@ -9,15 +9,17 @@ default:
 	@echo ""
 	@echo "make pick_voq"
 	@echo "make sched.vcd"
+	@echo "make vmu.vcd"
 	@echo "make lint"
-	@echo "make output_files/lab1.sof"
-	@echo "make program"
 
 pick_voq : obj_dir/Vpick_voq
 	(obj_dir/Vpick_voq && echo "SUCCESS") || echo "FAILED"
 
 sched.vcd : obj_dir/Vsched
 	obj_dir/Vsched
+
+vmu.vcd : obj_dir/Vvmu
+	obj_dir/Vvmu
 
 obj_dir/Vpick_voq : pick_voq.sv verilator/pick_voq.cpp
 	verilator -Wall -cc pick_voq.sv -exe verilator/pick_voq.cpp \
@@ -28,6 +30,11 @@ obj_dir/Vsched : sched.sv pick_voq.sv verilator/sched.cpp
 	verilator -trace -Wall -cc sched.sv pick_voq.sv -exe verilator/sched.cpp \
 		-top-module sched
 	cd obj_dir && make -j -f Vsched.mk
+
+obj_dir/Vvmu : vmu.sv simple_dual_port_mem.sv verilator/vmu.cpp
+	verilator -trace -Wall -cc vmu.sv simple_dual_port_mem.sv -exe verilator/vmu.cpp \
+		-top-module vmu
+	cd obj_dir && make -j -f Vvmu.mk
 
 lint :
 	for file in $(SVFILES); do \

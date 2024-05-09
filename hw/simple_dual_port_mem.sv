@@ -1,6 +1,6 @@
 module simple_dual_port_mem #(
-    parameter MEM_SIZE = 1024  /* How many bits of memory in total, 512 by default */
-    parameter DATA_WIDTH = 32  /* How many bit of data per cycle, 20 by default */
+    parameter MEM_SIZE = 1024,  /* How many addresses of memory in total, 1024 by default */
+    parameter DATA_WIDTH = 32  /* How many bit of data per cycle, 32 by default */
 ) (
     input logic clk,
     input logic [$clog2(MEM_SIZE) - 1:0] ra, wa, /* Address */
