@@ -1,6 +1,7 @@
 .PHONY: sched lint
 
-SVFILES = sched.sv, pick_voq.sv
+SVFILES = cmu.sv
+TOPMOD  = cmu
 
 # Run Verilator simulations
 
@@ -13,21 +14,13 @@ default:
 	@echo "make output_files/lab1.sof"
 	@echo "make program"
 
-pick_voq : obj_dir/Vpick_voq
-	(obj_dir/Vpick_voq && echo "SUCCESS") || echo "FAILED"
+cmu.vcd : obj_dir/Vcmu
+	obj_dir/Vcmu
 
-sched.vcd : obj_dir/Vsched
-	obj_dir/Vsched
-
-obj_dir/Vpick_voq : pick_voq.sv verilator/pick_voq.cpp
-	verilator -Wall -cc pick_voq.sv -exe verilator/pick_voq.cpp \
-		-top-module pick_voq
-	cd obj_dir && make -j -f Vpick_voq.mk
-
-obj_dir/Vsched : sched.sv pick_voq.sv verilator/sched.cpp
-	verilator -trace -Wall -cc sched.sv pick_voq.sv -exe verilator/sched.cpp \
-		-top-module sched
-	cd obj_dir && make -j -f Vsched.mk
+obj_dir/Vcmu : $(svfiles) verilator/cmu.cpp
+	verilator -trace -Wall -cc $(SVFILES) -exe verilator/cmu.cpp \
+		-top-module cmu
+	cd obj_dir && make -j -f Vcmu.mk
 
 lint :
 	for file in $(SVFILES); do \
