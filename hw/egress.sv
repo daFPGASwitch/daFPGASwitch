@@ -123,6 +123,8 @@ module egress #(
 	input logic read_en, // Comes from the software
 	input logic [31:0] counter,
 
+	// @TODO: update w/ actual packet data -> data_out
+	// currently sends metadata -> data_out to software (for testing) until integrated
 	output logic [PACKET_XFER_LEN-1:0] data_out,
 	output logic data_valid,
 	output logic buffer_empty,
