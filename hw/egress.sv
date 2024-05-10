@@ -24,13 +24,13 @@ module pack_val #(
 	always_ff @(posedge clk) begin
 		if (reset) begin
 			state <= IDLE;
+			counter <= 0;
 		end else begin
 			case (state)
 				// @TODO: currently using the lower two bits of the MAC addr as the port
 				// will replace with real logic after MAC-to-port module is implemented
 			IDLE: begin
 				if (data_en) begin
-					packet_len <= data_in[29:24];
 					meta_out <= '{dest: data_in[9:8], src: 2'b0, len: data_in[29:24], t_delta: 22'b0};
 					time_start <= 32'b0;
 					meta_en <= 0;
