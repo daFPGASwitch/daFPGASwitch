@@ -208,6 +208,14 @@ module egress #(
 		.done(packet_meta_done)
  	);
 
+	task update_ring_buffer_ptr(input logic update_head);
+		if (update_head) begin
+			head <= (head + 1) % BUFFER_LEN;
+		end else begin
+			tail <= (tail + 1) % BUFFER_LEN;
+		end
+	endtask
+
 `ifdef DEBUG
   	task print_buffer;
     	$display("\nCurrent egress buffer contents:");
