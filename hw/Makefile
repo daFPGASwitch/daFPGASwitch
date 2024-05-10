@@ -1,7 +1,7 @@
-.PHONY: sched lint
+.PHONY: lint
 
 CMU_FILES = cmu.sv
-SVFILES = cmu.sv sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv
+SVFILES = cmu.sv sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv crossbar.sv
 
 # Run Verilator simulations
 
@@ -9,10 +9,17 @@ default:
 	@echo "No target given. Try:"
 	@echo ""
 	@echo "make pick_voq"
+	@echo "make crossbar"
 	@echo "make sched.vcd"
 	@echo "make vmu.vcd"
 	@echo "make cmu.vcd"
 	@echo "make lint"
+
+pick_voq : obj_dir/Vpick_voq
+	(obj_dir/Vpick_voq && echo "SUCCESS") || echo "FAILED"
+
+crossbar: obj_dir/Vcrossbar
+	(obj_dir/Vcrossbar && echo "SUCCESS") || echo "FAILED"
 
 cmu.vcd : obj_dir/Vcmu
 	obj_dir/Vcmu
@@ -32,6 +39,11 @@ obj_dir/Vpick_voq : pick_voq.sv verilator/pick_voq.cpp
 	verilator -Wall -cc pick_voq.sv -exe verilator/pick_voq.cpp \
 		-top-module pick_voq
 	cd obj_dir && make -j -f Vpick_voq.mk
+
+obj_dir/Vcrossbar : crossbar.sv verilator/crossbar.cpp
+	verilator -Wall -cc crossbar.sv -exe verilator/crossbar.cpp \
+		-top-module crossbar
+	cd obj_dir && make -j -f Vcrossbar.mk
 
 obj_dir/Vsched : sched.sv pick_voq.sv verilator/sched.cpp
 	verilator -trace -Wall -cc sched.sv pick_voq.sv -exe verilator/sched.cpp \
