@@ -1,6 +1,7 @@
 .PHONY: lint
 
 CMU_FILES = cmu.sv
+PACKET_GEN_FILES = packet_gen.sv simple_dual_port_mem.sv port_to_mac.sv
 SVFILES = cmu.sv sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv crossbar.sv
 
 # Run Verilator simulations
@@ -14,6 +15,10 @@ default:
 	@echo "make vmu.vcd"
 	@echo "make cmu.vcd"
 	@echo "make lint"
+	@echo "make packet_gen.vcd"
+
+packet_gen.vcd : obj_dir/Vpacket_gen
+		obj_dir/Vpacket_gen
 
 pick_voq : obj_dir/Vpick_voq
 	(obj_dir/Vpick_voq && echo "SUCCESS") || echo "FAILED"
@@ -29,6 +34,11 @@ sched.vcd : obj_dir/Vsched
 
 vmu.vcd : obj_dir/Vvmu
 	obj_dir/Vvmu
+
+obj_dir/Vpacket_gen : $(PACKET_GEN_FILES) verilator/packet_gen.cpp
+	verilator -trace -Wall -cc $(PACKET_GEN_FILES) -exe verilator/packet_gen.cpp \
+		-top-module packet_gen
+	cd obj_dir && make -j -f Vpacket_gen.mk
 
 obj_dir/Vcmu : $(CMU_FILES) verilator/cmu.cpp
 	verilator -trace -Wall -cc $(CMU_FILES) -exe verilator/cmu.cpp \
