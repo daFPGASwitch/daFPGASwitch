@@ -1,5 +1,5 @@
 #include <iostream>
-#include "VdaFPGASwitch.h"
+#include "Vda_fpga_switch.h"
 #include <verilated.h>
 #include <verilated_vcd_c.h>
 
@@ -19,14 +19,14 @@ int main(int argc, const char ** argv, const char ** env) {
   if (argc > 1 && argv[1][0] != '+') n = atoi(argv[1]);
   else n = 4; // Default
 
-  VdaFPGASwitch * dut = new VdaFPGASwitch;  // Instantiate the packet_gen module
+  Vda_fpga_switch * dut = new Vda_fpga_switch;  // Instantiate the packet_gen module
 
   // Enable dumping a VCD file
   
   Verilated::traceEverOn(true);
   VerilatedVcdC * tfp = new VerilatedVcdC;
   dut->trace(tfp, 99); // Verilator should trace signals up to 99 levels deep
-  tfp->open("daFPGASwitch.vcd");
+  tfp->open("da_fpga_switch.vcd");
 
   // std::cout << dut->n; // Print the starting value of the sequence
 

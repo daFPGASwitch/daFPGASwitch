@@ -1,7 +1,7 @@
 .PHONY: lint
 
 PACKET_VAL_FILES = packet_val.sv simple_dual_port_mem.sv port_to_mac.sv mac_to_port.sv
-TOP_FILES = daFPGASwitch.sv packet_gen.sv hw_sw_interface.sv simple_dual_port_mem.sv port_to_mac.sv packet_val.sv mac_to_port.sv
+TOP_FILES = da_fpga_switch.sv packet_gen.sv hw_sw_interface.sv simple_dual_port_mem.sv port_to_mac.sv packet_val.sv mac_to_port.sv
 CMU_FILES = cmu.sv true_dual_port_mem.sv
 PACKET_GEN_FILES = packet_gen.sv simple_dual_port_mem.sv port_to_mac.sv
 SVFILES = cmu.sv sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv crossbar.sv
@@ -23,8 +23,8 @@ default:
 packet_val.vcd : obj_dir/Vpacket_val
 		obj_dir/Vpacket_val
 
-daFPGASwitch.vcd : obj_dir/VdaFPGASwitch
-		obj_dir/VdaFPGASwitch
+da_fpga_switch.vcd : obj_dir/Vda_fpga_switch
+		obj_dir/Vda_fpga_switch
 
 packet_gen.vcd : obj_dir/Vpacket_gen
 		obj_dir/Vpacket_gen
@@ -44,10 +44,10 @@ sched.vcd : obj_dir/Vsched
 vmu.vcd : obj_dir/Vvmu
 	obj_dir/Vvmu
 
-obj_dir/VdaFPGASwitch : $(TOP_FILES) verilator/daFPGASwitch.cpp
-	verilator -trace -Wall -cc $(TOP_FILES) -exe verilator/daFPGASwitch.cpp \
-		-top-module daFPGASwitch
-	cd obj_dir && make -j -f VdaFPGASwitch.mk
+obj_dir/Vda_fpga_switch : $(TOP_FILES) verilator/da_fpga_switch.cpp
+	verilator -trace -Wall -cc $(TOP_FILES) -exe verilator/da_fpga_switch.cpp \
+		-top-module da_fpga_switch
+	cd obj_dir && make -j -f Vda_fpga_switch.mk
 
 
 obj_dir/Vpacket_val : $(PACKET_VAL_FILES) verilator/packet_val.cpp
