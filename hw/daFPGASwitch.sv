@@ -1,5 +1,5 @@
 `include "switch_defs.svh"
-module top #()
+module daFPGASwitch #()
 (
     // From sw
     input logic clk,
