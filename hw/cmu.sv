@@ -23,7 +23,8 @@ module cmu (
     input logic [5:0] remaining_packet_length, // in blocks
     input logic wen, free_en,
     input logic [9:0] raddr, 
-    output logic [9:0] packet_addr = 10'b0 // the address in cmem for the first chunk of the packet
+    output logic [9:0] packet_addr = 10'b0, // the address in cmem for the first chunk of the packet
+	output logic [9:0] next_read = 10'b0
 );
 	
 	
@@ -42,7 +43,7 @@ module cmu (
 	logic		new_block 	= 0;
 	logic		read_next 	= 0;
 	logic		update_next = 1;
-	logic		return_chain= 1;
+//	logic		return_chain= 1;
 
 	logic[9:0] next_ctrl = 10'b0;
 
@@ -63,6 +64,7 @@ module cmu (
 
 		if (new_block) begin
 			/* verilator lint_on ALWCOMBORDER */
+			/* Formatting ctrl data  */
 			ctrl_in_a[10] <= 1'b1;
 			
 			if (remaining_packet_length > 1) begin
@@ -75,12 +77,12 @@ module cmu (
 			/* verilator lint_on ALWCOMBORDER */
 		
 			addr_a 		<= 	curr_write;
-			packet_addr	<=	curr_write;
 			ctrl_wen_a 	<=	1'b1;
 			new_block	<=	1'b0;
 			read_next	<=	1'b1;
 		end
-
+		
+		/* Read the next free block */
 		if (read_next == 1'b1) begin
 			ctrl_wen_a	<=	1'b0;
 			addr_a		<=  next_write;
@@ -89,6 +91,7 @@ module cmu (
 			update_next <=  1'b1;
 		end	
 
+		/* Determine if the next free block is in a chain */
 		if (update_next == 1'b1) begin
 			/* verilator lint_off ALWCOMBORDER */
 			curr_write <= next_write;
@@ -111,19 +114,14 @@ module cmu (
 			ctrl_wen_b 		<=	1'b1; 		    
 			empty_blocks	<=	empty_blocks + 1;
 			next_write		<=  raddr;
-
-			return_chain	<= 1'b1;	
 		end
 
 		if (ctrl_wen_b == 1'b1) begin
 			ctrl_wen_b	<=	1'b0;
 		end
 
-		if (return_chain ==	1'b1) begin
-			packet_addr		<=	ctrl_out_b[9:0];
-			return_chain	<=	1'b0;
-		end
-
+		packet_addr		<=	curr_write;
+		next_read		<=  ctrl_out_b[9:0];
 		ctrl_in_b		<= 	{1'b0, next_write};	
 		addr_b	 		<= 	raddr;
     end

@@ -49,7 +49,7 @@ int main(int argc, const char ** argv, const char ** env) {
     } else if (time % 160 == 20) {
 		dut->wen = 0;
     } else if (time % 160 == 40) {
-		dut->free_en = 1;
+		dut->free_en = 0;
 	} else if (time % 160 == 60) {
 		dut->free_en = 0;
 	}
