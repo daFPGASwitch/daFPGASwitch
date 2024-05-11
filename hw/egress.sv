@@ -10,16 +10,18 @@ module pack_val #(
 	input logic reset,
 	input logic data_en,
 	input logic [`BLOCK_SIZE-1:0] data_in,
+	input logic [9:0] head,
+	input logic [9:0] tail,
 
 	output metadata_o meta_out,
-  	output logic done
+	output logic done
 );
 
 	PACKET_METADATA_STATE state;
 	logic meta_en;
-	logic [`BLOCK_SIZE-1:0] meta_data, time_start, time_end;
+	logic [`BLOCK_SIZE-1:0] time_start, time_end;
 
-  	integer counter;
+	integer counter;
 
 	always_ff @(posedge clk) begin
 		if (reset) begin
@@ -33,14 +35,13 @@ module pack_val #(
 				if (data_en) begin
 					meta_out <= '{dest: data_in[9:8], src: 2'b0, len: data_in[29:24], t_delta: 22'b0};
 					time_start <= 32'b0;
-					meta_en <= 0;
 					state <= RECEIVE_LENGTH_DEST_MAC_SND;
-					done <= 0;
-               counter <= 0;
 				end else begin
-               state <= IDLE;
-               counter <= 0;
-            end
+					state <= IDLE;
+				end
+				counter <= 0;
+				done <= 0;
+				meta_en <= 0;
 			end
 
 			// @TODO: update `dest` (all 4 bytes) after implementing MAC-to-port
@@ -76,34 +77,34 @@ module pack_val #(
 `endif
 			end
 			DONE: begin
-            if (counter) begin
-              	state <= IDLE;
+				if (counter) begin
+					state <= IDLE;
 					done <= 1;
-         	  	meta_en <= 1;
+					meta_en <= 1;
 					counter <= 0;
 `ifdef DEBUG
                $display("RECEIVED FULL PAYLOAD\tdest %b (%d)\tsrc %b (%d)\tlen %b (%d)", meta_out.dest, meta_out.dest, meta_out.src, meta_out.src, meta_out.len, meta_out.len);
 `endif
-            end else begin
-            	counter <= counter + 1;
+				end else begin
+					counter <= counter + 1;
 					done <= 0;
 `ifdef DEBUG
-               $display("DONE\ttime_delta=%b", meta_out.t_delta);
-               $display("DONE\tdest %b (%d)\tsrc %b (%d)\tlen %b (%d)", meta_out.dest, meta_out.dest, meta_out.src, meta_out.src, meta_out.len, meta_out.len);
+					$display("DONE\ttime_delta=%b", meta_out.t_delta);
+					$display("DONE\tdest %b (%d)\tsrc %b (%d)\tlen %b (%d)", meta_out.dest, meta_out.dest, meta_out.src, meta_out.src, meta_out.len, meta_out.len);
 `endif
-           	end
-         end
+					end
+				end
 			endcase
 		end
  	end
 
 	simple_dual_port_mem #(
-		.MEM_SIZE(PACKET_CNT),
-		.DATA_WIDTH(8)
+		.MEM_SIZE(BUFFER_LEN),
+		.DATA_WIDTH(PACKET_XFER_LEN)
 	) vmem (
 		.clk(clk),
-		.ra(start_idx), // @TODO: set w/ actual start_idx
-		.wa(end_idx),  // @TODO: set w/ actual end_idx
+		.ra(head),
+		.wa(tail),
 		.d(data_en),
 		.q(meta_out),
 		.write(meta_en)
@@ -157,53 +158,63 @@ module egress #(
 	  	if (reset) begin: RESET_EGRESS_BUFFERS
 	      head <= 0;
 	      tail <= 0;
-			process_packet_en <= 0;
+				process_packet_en <= 0;
        	count <= 0;
+				data_ready <= 0;
 	  	end else begin: NOT_RESET
-    		if (write_en && count == 0) begin
+    		if (write_en && count == 0) begin: write_cycle0
             packet_in <= data_in;
           	process_packet_en <= 1;
             data_ready <= 1;
-            count <= 0;
-        	end else if ((data_ready) && count < 8) begin
-        		process_packet_en <= 1;
+						count <= 1;
+        	end else if ((data_ready) && count < 6) begin: write_cycles1_5
             packet_in <= data_in;
-            data_ready <= 1;
            	count <= count + 1;
-        	end else if (packet_meta_done && count == 8) begin
+        	end else if (packet_meta_done && count == 6) begin
             buffer[tail] <= meta_data;
-            tail <= (tail + 1) % BUFFER_LEN;
+						update_ring_buffer_ptr(1'b0);
             process_packet_en <= 0;
             count <= 0;
-   			data_ready <= 0;
+   					data_ready <= 0;
         	end
-			if (out_valid) begin
-            data_out <= buffer[head][31:0];
-            data_valid <= 1;
-         end else if (data_valid && !out_valid) begin
-            head <= (head + 1) % BUFFER_LEN;
-            data_valid <= 0;
-         end
-	  end
+
+				if (out_valid) begin
+					data_out <= buffer[head][31:0];
+					data_valid <= 1;
+				end else if (data_valid && !out_valid) begin
+					update_ring_buffer_ptr(1'b1);
+					data_valid <= 0;
+				end
+	  	end
 `ifdef DEBUG
       print_buffer();
 `endif
 	end
 
-  	assign out_valid = (read_en && head != tail);
-  	assign pkt2meta_en = process_packet_en && !buffer_full;
+	assign out_valid = (read_en && head != tail);
+	assign pkt2meta_en = process_packet_en && !buffer_full;
 
 	pack_val #(
-	     .PACKET_XFER_LEN(PACKET_XFER_LEN),
-	     .BUFFER_LEN(BUFFER_LEN)
+		.PACKET_XFER_LEN(PACKET_XFER_LEN),
+		.BUFFER_LEN(BUFFER_LEN)
  	) pack_val_0 (
-	     .clk(clk),
-	     .reset(reset),
-		  .data_en(pkt2meta_en),
-		  .data_in(packet_in),
-		  .meta_out(meta_data),
-	     .done(packet_meta_done)
+		.clk(clk),
+		.reset(reset),
+		.data_en(pkt2meta_en),
+		.data_in(packet_in),
+		.head(head),
+		.tail(tail),
+		.meta_out(meta_data),
+		.done(packet_meta_done)
  	);
+
+	task update_ring_buffer_ptr(input logic update_head);
+		if (update_head) begin
+			head <= (head + 1) % BUFFER_LEN;
+		end else begin
+			tail <= (tail + 1) % BUFFER_LEN;
+		end
+	endtask
 
 `ifdef DEBUG
   	task print_buffer;

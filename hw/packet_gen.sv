@@ -33,7 +33,7 @@ Part of packet (by block)
 
 
 
-module packet_gen #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 16)
+module packet_gen #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 32)
 (
     input logic            clk,
     input logic            reset,
@@ -49,12 +49,12 @@ module packet_gen #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 1
     logic [$clog2(PACKET_CNT)-1: 0] start_idx; // The first element
     logic [$clog2(PACKET_CNT)-1: 0] end_idx; // One pass the last element
 
-    logic [11:0] remaining_length;
-    logic [11:0] next_remaining_length;
+    logic [5:0] remaining_length;
+    logic [5:0] next_remaining_length;
     logic [47:0] DMAC;
     logic [15:0] length_in_bits;
     logic [3:0]  state, next_state;
-    assign length_in_bits = meta_out[11:0] * 32;
+    assign length_in_bits = meta_out[27:22] * 32;
     // SMAC_FST, SMAC_SND Are not used
     
 
@@ -70,14 +70,14 @@ module packet_gen #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 1
 		packet_ready = 1;
 	    end // LENGTH_DMAC_FST
 	    `LENGTH_DMAC_SND : begin
-		next_remaining_length = meta_out[11:0];
+		next_remaining_length = meta_out[27:22];
 		next_state = `TIME_FST;
 		packet     = DMAC[31:0];
 		packet_ready = 1;
 	    end // LENGTH_DMAC_SND
 	    `TIME_FST        : begin
 		next_state = `TIME_SND;
-		packet     = 32'b0;
+		packet     = {10'b0, meta_out[21:0]};
 		packet_ready = 1;
 	    end // TIME_FST	
 	    `TIME_SND        : begin
@@ -87,12 +87,12 @@ module packet_gen #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 1
 	    end // TIME_SND
 	    `SMAC_FST        : begin
 		next_state = `SMAC_SND;
-		packet     = {30'b0, meta_out[15:14]};
+		packet     = {30'b0, meta_out[31:30]};
 		packet_ready = 1;
 	    end //SMAC_FST
 	    `SMAC_SND        : begin
 		next_state = `PAYLOAD;
-		packet     = {30'b0, meta_out[15:14]};
+		packet     = {30'b0, meta_out[31:30]};
 		packet_ready = 1;
 	    end //SMAC_SND
 	    `PAYLOAD     : begin
@@ -129,7 +129,7 @@ module packet_gen #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 1
 	        end_idx <= (end_idx != PACKET_CNT - 1) ? end_idx + 1 : 0;
 	        
 	    end //meta_en
-	    if(send_en) begin	
+	    if(send_en && (start_idx != end_idx)) begin	
 	        if(next_state == `IDLE) begin
 		    start_idx <= (start_idx != PACKET_CNT - 1) ? start_idx + 1 : 0;
 	        end 
@@ -141,7 +141,7 @@ module packet_gen #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 1
     end //always_ff
 
 
-	simple_dual_port_mem #(.MEM_SIZE(PACKET_CNT), .DATA_WIDTH(16)) vmem
+	simple_dual_port_mem #(.MEM_SIZE(PACKET_CNT), .DATA_WIDTH(32)) vmem
 	(	
 		.clk(clk), 
 		.ra(start_idx), .wa(end_idx),
@@ -150,7 +150,7 @@ module packet_gen #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 1
 	);
 
 	port_to_mac port_to_mac_0(
-		.port_number(meta_out[13:12]),
+		.port_number(meta_out[29:28]),
 		.MAC(DMAC)
 	);
 
