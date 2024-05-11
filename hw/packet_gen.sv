@@ -39,12 +39,14 @@ module packet_gen #(
 ) (
     input  logic                  clk,
     input  logic                  reset,
-    input  logic                  meta_en,
-    input  logic                  send_en,
-    //input [1:0] src_port;
-    input  logic [META_WIDTH-1:0] meta_in,
-    output logic                  packet_ready,
-    output logic [          31:0] packet
+
+    input  logic [META_WIDTH-1:0] packet_gen_in,
+    input  logic                  packet_gen_in_en,
+    input  logic                  experimenting,
+
+	// To Ingress
+    output logic                  packet_gen_out_en,
+    output logic [31:0]           packet_gen_out
 );
   logic [META_WIDTH-1:0] meta_out;
 
@@ -64,42 +66,42 @@ module packet_gen #(
     case (state)
       `IDLE: begin
         next_state   = `LENGTH_DMAC_FST;
-        packet_ready = 0;
+        packet_gen_out_en = 0;
       end  //START
       `LENGTH_DMAC_FST: begin
         next_state   = `LENGTH_DMAC_SND;
-        packet       = {length_in_bits, DMAC[47:32]};
-        packet_ready = 1;
+        packet_gen_out       = {length_in_bits, DMAC[47:32]};
+        packet_gen_out_en = 1;
       end  // LENGTH_DMAC_FST
       `LENGTH_DMAC_SND: begin
         next_remaining_length = meta_out[27:22];
         next_state            = `TIME_FST;
-        packet                = DMAC[31:0];
-        packet_ready          = 0;
+        packet_gen_out                = DMAC[31:0];
+        packet_gen_out_en          = 0;
       end  // LENGTH_DMAC_SND
       `TIME_FST: begin
         next_state   = `TIME_SND;
-        packet       = {10'b0, meta_out[21:0]};
-        packet_ready = 0;
+        packet_gen_out       = {10'b0, meta_out[21:0]};
+        packet_gen_out_en = 0;
       end  // TIME_FST	
       `TIME_SND: begin
         next_state   = `SMAC_FST;
-        packet       = 32'b0;
-        packet_ready = 0;
+        packet_gen_out       = 32'b0;
+        packet_gen_out_en = 0;
       end  // TIME_SND
       `SMAC_FST: begin
         next_state   = `SMAC_SND;
-        packet       = {16'b0, SMAC[47:32]};
-        packet_ready = 0;
+        packet_gen_out       = {16'b0, SMAC[47:32]};
+        packet_gen_out_en = 0;
       end  //SMAC_FST
       `SMAC_SND: begin
         next_state   = `PAYLOAD;
-        packet       = SMAC[31:0];
-        packet_ready = 0;
+        packet_gen_out       = SMAC[31:0];
+        packet_gen_out_en = 0;
       end  //SMAC_SND
       `PAYLOAD: begin
-        packet       = ~32'b0;
-        packet_ready = 0;
+        packet_gen_out       = ~32'b0;
+        packet_gen_out_en = 0;
         if (remaining_length > 0) begin
           next_remaining_length = remaining_length - 1;
           next_state            = `PAYLOAD;
@@ -109,7 +111,7 @@ module packet_gen #(
         end  // else remaining_length < 0
       end  // SRC_PAYLOAD	
       default: begin
-        packet_ready = 0;
+        packet_gen_out_en = 0;
       end
 
 
@@ -124,20 +126,20 @@ module packet_gen #(
       start_idx <= 0;
       end_idx   <= 0;
       state     <= `IDLE;
-      //packet_ready = 0;
+      //packet_gen_out_en = 0;
     end //if reset
 	else begin
-      if (meta_en) begin
+      if (packet_gen_in_en) begin
         end_idx <= (end_idx == 1023) ? 0 : end_idx + 1;
 
-      end  //meta_en
-      if (send_en && (start_idx != end_idx)) begin
+      end  //packet_gen_in_en
+      if (experimenting && (start_idx != end_idx)) begin
         if (state == `IDLE) begin
           start_idx <= (start_idx != 1023) ? start_idx + 1 : 0;
         end
         state <= next_state;
         remaining_length <= next_remaining_length;
-      end  // send_en
+      end  // experimenting
     end  // not reset
 
   end  //always_ff
@@ -150,9 +152,9 @@ module packet_gen #(
       .clk(clk),
       .ra(start_idx),
       .wa(end_idx),
-      .d(meta_in),
+      .d(packet_gen_in),
       .q(meta_out),
-      .write(meta_en)
+      .write(packet_gen_in_en)
   );
 
   port_to_mac port_to_mac_0 (
