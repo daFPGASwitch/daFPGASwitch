@@ -15,6 +15,9 @@ module ingress (
 	logic [2:0] input_counter;
 	logic [2:0] output_counter;
 	
+	logic [5:0] remaining_packet_length;
+	logic 		ctrl_wen;
+
 	always @(posedge clk) begin
 		input_counter <= (input_counter == 3'b111) ? 3'b000 : counter + 1;
 		output_counter <= (input_counter == 3'b111) ? 3'b000 : counter + 1;
@@ -22,9 +25,19 @@ module ingress (
 			3'b000: begin
 				if (packet_en) begin
 					input_counter <= 3'b001;
-				end		  
+					remaining_packet_length <= packet_in[31:16] >> 5;
+					d_mac[47:32] <= packet_in[15:0];
+				end
+
+				/* trigger CMU */
+				ctrl_wen <= 1'b1;
+
+				/* write to DMEM */
+										  
 			end
 			3'b001: begin
+				ctrl_wen <= 1'b0;
+				d_mac[31:0]	<=	packet_in;
 			end
 			3'b010: begin
 			end
@@ -82,8 +95,8 @@ module ingress (
 	(
 		// Input when inputting
 		.clk(clk), 
-    	.remaining_packet_length(), // in blocks
-		.wen(), // writing data in
+    	.remaining_packet_length(remaining_packet_length), // in blocks
+		.wen(ctrl_wen), // writing data in
 
 		// Input when outputting
 		.free_en(),
