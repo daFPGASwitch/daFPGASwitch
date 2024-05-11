@@ -16,7 +16,7 @@ Part of packet (by definition)
 Part of packet (by block)
 * Length: 2 Bytes + Dest MAC: 6 Bytes
 * Time stamp: 8 bytes
-* Src MAC: 6 Bytes + 2 garbage byte
+* Src MAC: 2 garbage byte + 6 Bytes
 * Data payload all 1's for now for the rest of the bits (at least 8 bytes)
 
 */
