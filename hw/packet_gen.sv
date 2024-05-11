@@ -129,7 +129,7 @@ module packet_gen #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 3
 	        end_idx <= (end_idx != PACKET_CNT - 1) ? end_idx + 1 : 0;
 	        
 	    end //meta_en
-	    if(send_en) begin	
+	    if(send_en && (start_idx != end_idx)) begin	
 	        if(next_state == `IDLE) begin
 		    start_idx <= (start_idx != PACKET_CNT - 1) ? start_idx + 1 : 0;
 	        end 
