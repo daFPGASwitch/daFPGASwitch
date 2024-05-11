@@ -8,8 +8,8 @@ module hw_sw_interface #() // Params
     input logic         read,
     input logic [2:0]   address,
     input logic [31:0]  data_from_egress,
-    input logic         done,
     input logic         chipselect,
+
 
     output logic [31:0] readdata,
     output logic 	meta_en,
@@ -17,12 +17,12 @@ module hw_sw_interface #() // Params
     output logic [31:0] ctrl
     // output logic irq
 );
-   logic [31:0]         packet_meta, dummy; // 0 -> 
+   //logic [31:0]         dummy; // 0 -> 
    always_ff @(posedge clk)
       if (reset) begin
 	  ctrl <= 32'h0;
 	  //packet_meta <= 32'h0;
-	  dummy <= 32'h0;
+	  //dummy <= 32'h0;
 	  readdata <= 32'h0;
 	  meta_en  <= 0;
       end else begin
@@ -38,14 +38,14 @@ module hw_sw_interface #() // Params
 			meta_in     <= writedata;
 		 end
                  default :  begin 
-			dummy <= writedata;
+			//dummy <= writedata;
 			meta_en <= 0;
 		 end
       	    endcase
         end
 	if (chipselect && read) begin
 	    case(address)
-		3'h1 : readdata <= (done == 1) ? data_from_egress : 32'h0;
+		3'h1 : readdata <= data_from_egress;
 		default: readdata <= 32'h0;		
 	    endcase
 	end

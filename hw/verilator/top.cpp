@@ -37,21 +37,21 @@ int main(int argc, const char ** argv, const char ** env) {
     std::cout << "time: " << time << std::endl; 
     dut->clk = ((time % 20) >= 10) ? 0 : 1; // Simulate a 50 MHz clock
     if ((time % 20) >= 10) {
-      if(time == 40) {
+      if(time == 50) {
         dut -> write = 1;
 	dut -> read  = 0;
 	dut -> address = 2;
 	dut -> chipselect = 1;
 	dut -> writedata  = 0b01110000010000000000000000000000;
 	dut -> reset = 0;
-      } else if(time == 400){
+      } else if(time == 410){
 	dut -> write = 1;
 	dut -> read = 0;
 	dut -> chipselect = 1;
 	dut -> address = 1;
 	dut -> writedata = 2;
 	dut -> reset = 0;
-      } else if(time == 660) {
+      } else if(time == 670) {
 	dut -> write = 0;
 	dut -> chipselect = 1;
 	dut -> read = 1;
