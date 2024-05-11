@@ -19,8 +19,6 @@ default:
 	@echo "make lint"
 	@echo "make packet_gen.vcd"
 
-
-
 packet_val.vcd : obj_dir/Vpacket_val
 		obj_dir/Vpacket_val
 
