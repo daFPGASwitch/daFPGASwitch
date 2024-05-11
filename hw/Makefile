@@ -2,9 +2,10 @@
 
 PACKET_VAL_FILES = packet_val.sv simple_dual_port_mem.sv port_to_mac.sv mac_to_port.sv
 TOP_FILES = daFPGASwitch.sv packet_gen.sv hw_sw_interface.sv simple_dual_port_mem.sv port_to_mac.sv packet_val.sv mac_to_port.sv
-CMU_FILES = cmu.sv
+CMU_FILES = cmu.sv true_dual_port_mem.sv
 PACKET_GEN_FILES = packet_gen.sv simple_dual_port_mem.sv port_to_mac.sv
 SVFILES = cmu.sv sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv crossbar.sv
+SCHED_FILES = sched.sv pick_voq.sv
 
 # Run Verilator simulations
 
@@ -74,7 +75,7 @@ obj_dir/Vcrossbar : crossbar.sv verilator/crossbar.cpp
 		-top-module crossbar
 	cd obj_dir && make -j -f Vcrossbar.mk
 
-obj_dir/Vsched : sched.sv pick_voq.sv verilator/sched.cpp
+obj_dir/Vsched : $(SCHED_FILES) verilator/sched.cpp
 	verilator -trace -Wall -cc sched.sv pick_voq.sv -exe verilator/sched.cpp \
 		-top-module sched
 	cd obj_dir && make -j -f Vsched.mk
