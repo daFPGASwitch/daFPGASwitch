@@ -17,19 +17,19 @@
          type = "int";
       }
    }
+   element da_fpga_switch_0
+   {
+      datum _sortIndex
+      {
+         value = "2";
+         type = "int";
+      }
+   }
    element hps_0
    {
       datum _sortIndex
       {
          value = "1";
-         type = "int";
-      }
-   }
-   element vga_ball_0
-   {
-      datum _sortIndex
-      {
-         value = "2";
          type = "int";
       }
    }
@@ -58,13 +58,17 @@
  <interface name="hps" internal="hps_0.hps_io" type="conduit" dir="end" />
  <interface name="hps_ddr3" internal="hps_0.memory" type="conduit" dir="end" />
  <interface name="reset" internal="clk_0.clk_in_reset" type="reset" dir="end" />
- <interface name="vga" internal="vga_ball_0.vga" type="conduit" dir="end" />
  <module name="clk_0" kind="clock_source" version="21.1" enabled="1">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
   <parameter name="inputClockFrequency" value="0" />
   <parameter name="resetSynchronousEdges" value="NONE" />
  </module>
+ <module
+   name="da_fpga_switch_0"
+   kind="da_fpga_switch"
+   version="1.0"
+   enabled="1" />
  <module name="hps_0" kind="altera_hps" version="21.1" enabled="1">
   <parameter name="ABSTRACT_REAL_COMPARE_TEST" value="false" />
   <parameter name="ABS_RAM_MEM_INIT_FILENAME" value="meminit" />
@@ -595,17 +599,20 @@
   <parameter name="usb_mp_clk_div" value="0" />
   <parameter name="use_default_mpu_clk" value="true" />
  </module>
- <module name="vga_ball_0" kind="vga_ball" version="1.0" enabled="1" />
  <connection
    kind="avalon"
    version="21.1"
    start="hps_0.h2f_lw_axi_master"
-   end="vga_ball_0.avalon_slave_0">
+   end="da_fpga_switch_0.avalon_slave_0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection kind="clock" version="21.1" start="clk_0.clk" end="vga_ball_0.clock" />
+ <connection
+   kind="clock"
+   version="21.1"
+   start="clk_0.clk"
+   end="da_fpga_switch_0.clock" />
  <connection
    kind="clock"
    version="21.1"
@@ -625,7 +632,7 @@
    kind="reset"
    version="21.1"
    start="clk_0.clk_reset"
-   end="vga_ball_0.reset" />
+   end="da_fpga_switch_0.reset" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.enableEccProtection" value="FALSE" />
  <interconnectRequirement for="$system" name="qsys_mm.insertDefaultSlave" value="FALSE" />
