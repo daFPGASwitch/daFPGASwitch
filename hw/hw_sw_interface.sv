@@ -20,6 +20,9 @@ module hw_sw_interface #(
     output logic [ 3:0] interface_out_en,
     output logic [31:0] interface_out,
 
+    // Experimenting
+    output logic experimenting;
+
     // Special case: Because we're polling but not handling interrupt
     // we need to acknowledge that this metadata is consumed by the software.
     // This is the only ack in our program. 
@@ -27,6 +30,10 @@ module hw_sw_interface #(
 );
 
   logic [31:0] ctrl;
+
+  always_comb begin
+    experimenting = (ctrl == 2);
+  end
 
   always_ff @(posedge clk) begin
     if (reset) begin
