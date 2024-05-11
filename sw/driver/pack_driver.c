@@ -26,6 +26,7 @@
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/types.h>
+
 #include "da_driver.h"
 
 #define DRIVER_NAME "da_driver"
@@ -48,7 +49,8 @@ struct da_driver_dev {
     unsigned long packet_data[4];
 } dev;
 
-static unsigned int extract_port(unsigned int value) {
+static unsigned int extract_port(unsigned int value)
+{
     return value >> 30;
 }
 
@@ -56,7 +58,7 @@ static void write_packet_meta(pack_meta_t *meta)
 {
     unsigned int src_port = extract_port(*meta);
     if (src_port > 3) {
-        printk(KERN_ERR "Ports number should be btw 0 and 3");
+        printk(KERN_ERR "Port numbers should be btwn 0 and 3");
     }
     switch (src_port) {
         case 0: 
@@ -118,7 +120,7 @@ static long da_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
                 sizeof(packet_meta_t)))
 			return -EACCES;
 		break;
-    case DA_READ_PACKET_2:
+    case DA_READ_PACKET_1:
         pm = dev.packet_data[1];
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
@@ -198,7 +200,7 @@ static int __init da_probe(struct platform_device *pdev)
 	}
 
 	/* Set an initial color */
-    write_ctrl(&ctrl);
+    write_packet_ctrl(&ctrl);
 
 	return 0;
 
@@ -246,15 +248,15 @@ static int __init da_init(void)
 	return platform_driver_probe(&da_driver, da_probe);
 }
 
-/* Calball when the module is unloaded: release resources */
+/* Called when the module is unloaded: release resources */
 static void __exit da_exit(void)
 {
 	platform_driver_unregister(&da_driver);
 	pr_info(DRIVER_NAME ": exit\n");
 }
 
-module_init(da_driver_init);
-module_exit(da_driver_exit);
+module_init(da_init);
+module_exit(da_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Teng Jiang tj2488");
 MODULE_DESCRIPTION("daFPGASwitch Packet Driver");
