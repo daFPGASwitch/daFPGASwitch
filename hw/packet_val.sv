@@ -20,7 +20,6 @@ Part of packet (by block)
 * Data payload all 1's for now for the rest of the bits (at least 8 bytes)
 
 */
-//enum logic [3:0] {IDLE, LENGTH_DMAC_FST, LENGTH_DMAC_SND, TIME_FST, TIME_SND, SMAC_FST, SMAC_SND, PAYLOAD} state;
 
 `define IDLE 4'b0000
 `define LENGTH_DMAC_FST 4'b0001
@@ -37,15 +36,19 @@ module packet_val #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 3
 (
     input logic            clk,
     input logic            reset,
-    input logic            data_en,
-    input logic            send_en,
-    //input [1:0] src_port;
-    input logic [META_WIDTH-1:0] data_in,
+	
+	// From crossbar
+    input logic [META_WIDTH-1:0] egress_in,
+    input logic            egress_in_en,
 
-    output logic [31:0]    meta_out
+	// From interface
+    input logic            egress_out_ack,
+
+	// To interface
+    output logic [31:0]    egress_out
 );
 /* verilator lint_off UNUSED */
-    logic [META_WIDTH-1:0] temp_meta_out;
+    logic [META_WIDTH-1:0] temp_egress_out;
     
     logic [$clog2(PACKET_CNT)-1: 0] start_idx; // The first element
     logic [$clog2(PACKET_CNT)-1: 0] end_idx; // One pass the last element
@@ -61,10 +64,10 @@ module packet_val #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 3
 
     logic [3:0]  state, next_state;
     logic [15:0] temp_length;
-    assign temp_length = (data_in[31:16] >> 5);
+    assign temp_length = (egress_in[31:16] >> 5);
     assign length_in_blocks = temp_length[5:0];
 
-    assign temp_meta_out[21:0] = time_stamp[21:0];
+    assign temp_egress_out[21:0] = time_stamp[21:0];
 
     // SMAC_FST, SMAC_SND Are not used
 
@@ -74,32 +77,32 @@ module packet_val #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 3
         case(state)
 	    `IDLE           : begin
 		next_state = `LENGTH_DMAC_FST;
-		temp_meta_out = 32'b0;
+		temp_egress_out = 32'b0;
 		meta_ready = 0;
-		temp_meta_out[27:22]     = length_in_blocks;
+		temp_egress_out[27:22]     = length_in_blocks;
 	
-		next_remaining_length = data_in[31:16] - 4;
-		DMAC[47:32] = data_in[15:0];
+		next_remaining_length = egress_in[31:16] - 4;
+		DMAC[47:32] = egress_in[15:0];
 	    end //START
 	    `LENGTH_DMAC_FST : begin
 		next_state = `LENGTH_DMAC_SND;
 		meta_ready = 0;
-		DMAC[31:0] = data_in;
+		DMAC[31:0] = egress_in;
 		next_remaining_length = remaining_length - 4;
 	    end // LENGTH_DMAC_FST
 	    `LENGTH_DMAC_SND : begin
-		//next_remaining_length = meta_out[27:22];
+		//next_remaining_length = egress_out[27:22];
 		next_remaining_length = remaining_length - 4;
 		next_state = `TIME_FST;
-		temp_meta_out[29:28] = port_number;
-		next_start_time = data_in;
+		temp_egress_out[29:28] = port_number;
+		next_start_time = egress_in;
 		//packet     = DMAC[31:0];
 		meta_ready = 0;
 	    end // LENGTH_DMAC_SND
 	    `TIME_FST        : begin
 		next_state = `TIME_SND;
-		time_stamp = data_in - start_time;
-		//packet     = {10'b0, meta_out[21:0]};
+		time_stamp = egress_in - start_time;
+		//packet     = {10'b0, egress_out[21:0]};
 		meta_ready = 0;
 		next_remaining_length = remaining_length - 4;
 	    end // TIME_FST	
@@ -111,15 +114,15 @@ module packet_val #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 3
 	    end // TIME_SND
 	    `SMAC_FST        : begin
 		next_state = `SMAC_SND;
-		temp_meta_out[31:30] = data_in[1:0];		
-		//packet     = {30'b0, meta_out[31:30]};
+		temp_egress_out[31:30] = egress_in[1:0];		
+		//packet     = {30'b0, egress_out[31:30]};
 		meta_ready = 0;
 		next_remaining_length = remaining_length - 4;
 	    end //SMAC_FST
 	    `SMAC_SND        : begin
 		next_state = `PAYLOAD;
 		next_remaining_length = remaining_length - 4;
-		//packet     = {30'b0, meta_out[31:30]};
+		//packet     = {30'b0, egress_out[31:30]};
 		meta_ready = 0;
 	    end //SMAC_SND
 	    `PAYLOAD     : begin
@@ -138,8 +141,6 @@ module packet_val #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 3
 	    default: begin
 		meta_ready = 0;
 	    end 
-	    
-
 
 	endcase //end case
 
@@ -154,7 +155,7 @@ module packet_val #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 3
 	    //packet_ready = 0;
 	end //if reset
 	else begin
-	    if(data_en) begin
+	    if(egress_in_en) begin
 	        if(next_state == `IDLE) begin
 		    end_idx <= (end_idx != PACKET_CNT - 1) ? end_idx + 1 : 0;
 	        end 
@@ -162,11 +163,11 @@ module packet_val #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 3
 		remaining_length <= next_remaining_length;
 		start_time <= next_start_time;
 	    end //meta_en
-	    if(send_en && (start_idx != end_idx)) begin	
+	    if(egress_out_ack && (start_idx != end_idx)) begin	
 	        
 		start_idx <= (start_idx != PACKET_CNT - 1) ? start_idx + 1 : 0;
 	        
-   	    end // send_en
+   	    end // egress_out_ack
 	end // not reset
 
     end //always_ff
@@ -176,7 +177,7 @@ module packet_val #(parameter PACKET_CNT = 1023, BLOCK_SIZE = 32, META_WIDTH = 3
 	(	
 		.clk(clk), 
 		.ra(start_idx), .wa(end_idx),
-		.d(temp_meta_out),	.q(meta_out),
+		.d(temp_egress_out),	.q(egress_out),
 		.write(meta_ready)
 	);
 
