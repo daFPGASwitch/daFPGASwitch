@@ -33,37 +33,43 @@ int main(int argc, const char ** argv, const char ** env) {
   bool last_clk = true;
   int time;
   int iter = 0;
-  for (time = 0 ; time < 1000; time += 10) {
+  dut->reset = 0;
+
+  for (time = 0 ; time < 10000; time += 10) {
     std::cout << "time: " << time << std::endl; 
     dut->clk = ((time % 20) >= 10) ? 0 : 1; // Simulate a 50 MHz clock
-    if ((time % 20) >= 10) {
-      if(time == 50) {
-        dut -> write = 1;
-	dut -> read  = 0;
-	dut -> address = 2;
-	dut -> chipselect = 1;
-	dut -> writedata  = 0b01110000010000000000000000000000;
-	dut -> reset = 0;
-      } else if(time == 410){
-	dut -> write = 1;
-	dut -> read = 0;
-	dut -> chipselect = 1;
-	dut -> address = 1;
-	dut -> writedata = 2;
-	dut -> reset = 0;
-      } else if(time == 670) {
-	dut -> write = 0;
-	dut -> chipselect = 1;
-	dut -> read = 1;
-	dut -> address = 1;
-	dut -> reset = 0;
-	
-      }
-
-	iter++;
+    if (time == 40) {
+      dut->chipselect = 1;
+      dut->address = 1;
+      dut -> write = 1;
+      dut -> read  = 0;
+      dut->writedata  = 0b01110000010000000000000000000000;
     }
-    
-    iter = (iter == 10) ? 0 : iter;
+    if (time == 60) {
+      dut -> chipselect = 0;
+    }
+
+    if(time == 1000) {
+      dut -> write = 1;
+      dut -> chipselect = 1;
+      dut -> read = 0;
+      dut -> address = 0;
+      dut->writedata = 2;
+    }
+    if(time == 1020) {
+      dut -> chipselect = 0;
+    }
+  
+    if(time == 2000) {
+      dut -> write = 0;
+      dut -> chipselect = 1;
+      dut -> read = 1;
+      dut -> address = 1;
+    }
+    if(time == 2020) {
+      dut -> chipselect = 0;
+    }
+
     dut->eval();     // Run the simulation for a cycle
     tfp->dump(time); // Write the VCD file for this cycle
   }

@@ -45,7 +45,7 @@ module packet_val #(
     input logic                  egress_in_en,
 
     // From interface
-    input logic egress_out_ack,
+    input logic egress_in_ack,
 
     // To interface
     output logic [31:0] egress_out
@@ -166,11 +166,11 @@ module packet_val #(
         remaining_length <= next_remaining_length;
         start_time <= next_start_time;
       end  //meta_en
-      if (egress_out_ack && (start_idx != end_idx)) begin
+      if (egress_in_ack && (start_idx != end_idx)) begin
 
         start_idx <= (start_idx != PACKET_CNT - 1) ? start_idx + 1 : 0;
 
-      end  // egress_out_ack
+      end  // egress_in_ack
     end  // not reset
 
   end  //always_ff

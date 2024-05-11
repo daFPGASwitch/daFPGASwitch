@@ -17,16 +17,18 @@ module hw_sw_interface #(
     output logic [31:0] readdata,
 
     // To packet_val/ingress
-    output logic [ 3:0] interface_out_en,
+    // Change to 4 bits later
+    output logic interface_out_en,
     output logic [31:0] interface_out,
 
     // Experimenting
-    output logic experimenting;
+    output logic experimenting,
 
     // Special case: Because we're polling but not handling interrupt
     // we need to acknowledge that this metadata is consumed by the software.
     // This is the only ack in our program. 
-    output logic [3:0] interface_out_ack
+    // Change to 4 bits later
+    output logic interface_out_ack
 );
 
   logic [31:0] ctrl;
@@ -40,6 +42,7 @@ module hw_sw_interface #(
       ctrl <= 32'h0;
       readdata <= 32'h0;
       interface_out_en <= 0;
+      interface_out_ack <= 0;
       interface_out <= 0;
     end else begin
       if (chipselect && write) begin
@@ -48,29 +51,31 @@ module hw_sw_interface #(
             ctrl <= writedata;
           end
           3'h1: begin
-            interface_out_en[0] <= 1;
+            interface_out_en <= 1;
+            // interface_out_en[0] <= 1;
             interface_out <= writedata;
           end
           3'h2: begin
-            interface_out_en[1] <= 1;
+            // interface_out_en[1] <= 1;
             interface_out <= writedata;
           end
           3'h3: begin
-            interface_out_en[2] <= 1;
+            // interface_out_en[2] <= 1;
             interface_out <= writedata;
           end
           3'h4: begin
-            interface_out_en[3] <= 1;
+            // interface_out_en[3] <= 1;
             interface_out <= writedata;
           end
           default: begin
           end
         endcase
       end else begin
-        interface_out_en[0] <= 0;
-        interface_out_en[1] <= 0;
-        interface_out_en[2] <= 0;
-        interface_out_en[3] <= 0;
+        // interface_out_en[0] <= 0;
+        // interface_out_en[1] <= 0;
+        // interface_out_en[2] <= 0;
+        // interface_out_en[3] <= 0;
+        interface_out_en <= 0;
         interface_out <= 0;
       end
       if (chipselect && read) begin
@@ -78,29 +83,31 @@ module hw_sw_interface #(
         case (address)
           3'h1: begin
             readdata <= interface_in;
-            interface_out_ack[0] <= 1;
+            // interface_out_ack[0] <= 1;
+            interface_out_ack <= 1;
           end
           3'h2: begin
             readdata <= interface_in;
-            interface_out_ack[1] <= 1;
+            // interface_out_ack[1] <= 1;
           end
           3'h3: begin
             readdata <= interface_in;
-            interface_out_ack[2] <= 1;
+            // interface_out_ack[2] <= 1;
           end
           3'h4: begin
             readdata <= interface_in;
-            interface_out_ack[3] <= 1;
+            // interface_out_ack[3] <= 1;
           end
           default: begin
           end
         endcase
       end else begin
         readdata <= 0;
-        interface_out_ack[0] <= 0;
-        interface_out_ack[1] <= 0;
-        interface_out_ack[2] <= 0;
-        interface_out_ack[3] <= 0;
+        interface_out_ack <= 0;
+        // interface_out_ack[0] <= 0;
+        // interface_out_ack[1] <= 0;
+        // interface_out_ack[2] <= 0;
+        // interface_out_ack[3] <= 0;
       end
     end
   end

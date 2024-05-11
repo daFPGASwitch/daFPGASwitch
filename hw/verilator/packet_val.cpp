@@ -6,7 +6,7 @@
 using namespace std;
 unsigned char meta_en[] = {0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b0};
 
-unsigned char send_en[] = {0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b1};
+unsigned char egress_in_ack[] = {0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b1};
 
 unsigned int meta_in[] = {0b00000000010000000000000000000000, 0b00000000000000000000000000000011, 0b00000000000000000000000000000000, 0b00000000000000000000000000000000, 0b00000000000000000000000000000001, 0b00000000000000000000000000000001, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111};
 
@@ -38,12 +38,12 @@ int main(int argc, const char ** argv, const char ** env) {
     dut->clk = ((time % 20) >= 10) ? 0 : 1; // Simulate a 50 MHz clock
     if ((time % 20) >= 10) {
       if(time < 320) {
-        dut->data_en = meta_en[iter];
-        dut->send_en = send_en[iter];
-        dut->data_in = meta_in[iter];
+        dut->egress_in_en = meta_en[iter];
+        dut->egress_in_ack = egress_in_ack[iter];
+        dut->egress_in = meta_in[iter];
       } else {
-	dut -> send_en = send_en[16];
-	dut -> data_en = 0b0; 
+	dut -> egress_in_ack = egress_in_ack[16];
+	dut -> egress_in_en = 0b0; 
       }
 
 	iter++;

@@ -4,11 +4,11 @@
 #include <verilated_vcd_c.h>
 
 using namespace std;
-unsigned char meta_en[] = {0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1};
+unsigned char packet_gen_in_en[] = {0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1};
 
-unsigned char send_en[] = {0b0, 0b0, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1};
+unsigned char experimenting[] = {0b0, 0b0, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1};
 
-unsigned int meta_in[] = {0b01110000010000000000000000000000, 0b01110000100000000000000000000000, 0b01110000110000000000000000000000, 0b01110001000000000000000000000000, 0b01110001010000000000000000000000, 0b0111000000001000, 0b0111000000001001, 0b0111000000001010};
+unsigned int packet_gen_in[] = {0b01110000010000000000000000000000, 0b01110000100000000000000000000000, 0b01110000110000000000000000000000, 0b01110001000000000000000000000000, 0b01110001010000000000000000000000, 0b0111000000001000, 0b0111000000001001, 0b0111000000001010};
 
 
 int main(int argc, const char ** argv, const char ** env) {
@@ -38,12 +38,12 @@ int main(int argc, const char ** argv, const char ** env) {
     dut->clk = ((time % 20) >= 10) ? 0 : 1; // Simulate a 50 MHz clock
     if ((time % 20) >= 10) {
       if(time < 100) {
-        dut->meta_en = meta_en[iter];
-        dut->send_en = send_en[iter];
-        dut->meta_in = meta_in[iter];
+        dut->packet_gen_in_en = packet_gen_in_en[iter];
+        dut->experimenting = experimenting[iter];
+        dut->packet_gen_in = packet_gen_in[iter];
       } else {
-	dut -> send_en = send_en[5];
-	dut -> meta_en = 0b0; 
+	dut -> experimenting = experimenting[5];
+	dut -> packet_gen_in_en = 0b0; 
       }
 
 	iter++;
