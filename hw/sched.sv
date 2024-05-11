@@ -39,7 +39,7 @@ module sched (
   */
 
   // If the scheduler is in the process of assigning new packet
-  // 0: not assigning; 1~4: assigning.
+  // 0: not assigning; 1~4: assigning. 5 enable 6 is /enable
   logic [2:0] assigning_new;
 
   logic [3:0] ingress_enable; // the enable signal ready to be passed to sched_sel_en when ingress_done = 4'b1111
