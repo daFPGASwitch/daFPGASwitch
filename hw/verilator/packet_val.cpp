@@ -1,14 +1,14 @@
 #include <iostream>
-#include "Vpacket_gen.h"
+#include "Vpacket_val.h"
 #include <verilated.h>
 #include <verilated_vcd_c.h>
 
 using namespace std;
-unsigned char meta_en[] = {0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1};
+unsigned char meta_en[] = {0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b0};
 
-unsigned char send_en[] = {0b0, 0b0, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1};
+unsigned char send_en[] = {0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b1};
 
-unsigned int meta_in[] = {0b01110000010000000000000000000000, 0b01110000100000000000000000000000, 0b01110000110000000000000000000000, 0b01110001000000000000000000000000, 0b01110001010000000000000000000000, 0b0111000000001000, 0b0111000000001001, 0b0111000000001010};
+unsigned int meta_in[] = {0b00000000010000000000000000000000, 0b00000000000000000000000000000011, 0b00000000000000000000000000000000, 0b00000000000000000000000000000000, 0b00000000000000000000000000000001, 0b00000000000000000000000000000001, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111, 0b11111111111111111111111111111111};
 
 
 int main(int argc, const char ** argv, const char ** env) {
@@ -19,14 +19,14 @@ int main(int argc, const char ** argv, const char ** env) {
   if (argc > 1 && argv[1][0] != '+') n = atoi(argv[1]);
   else n = 4; // Default
 
-  Vpacket_gen * dut = new Vpacket_gen;  // Instantiate the packet_gen module
+  Vpacket_val * dut = new Vpacket_val;  // Instantiate the packet_gen module
 
   // Enable dumping a VCD file
   
   Verilated::traceEverOn(true);
   VerilatedVcdC * tfp = new VerilatedVcdC;
   dut->trace(tfp, 99); // Verilator should trace signals up to 99 levels deep
-  tfp->open("packet_gen.vcd");
+  tfp->open("packet_val.vcd");
 
   // std::cout << dut->n; // Print the starting value of the sequence
 
@@ -37,19 +37,19 @@ int main(int argc, const char ** argv, const char ** env) {
     std::cout << "time: " << time << std::endl; 
     dut->clk = ((time % 20) >= 10) ? 0 : 1; // Simulate a 50 MHz clock
     if ((time % 20) >= 10) {
-      if(time < 100) {
-        dut->meta_en = meta_en[iter];
+      if(time < 320) {
+        dut->data_en = meta_en[iter];
         dut->send_en = send_en[iter];
-        dut->meta_in = meta_in[iter];
+        dut->data_in = meta_in[iter];
       } else {
-	dut -> send_en = send_en[5];
-	dut -> meta_en = 0b0; 
+	dut -> send_en = send_en[16];
+	dut -> data_en = 0b0; 
       }
 
 	iter++;
     }
     
-    iter = (iter == 10) ? 0 : iter;
+    iter = (iter == 20) ? 0 : iter;
     dut->eval();     // Run the simulation for a cycle
     tfp->dump(time); // Write the VCD file for this cycle
   }
