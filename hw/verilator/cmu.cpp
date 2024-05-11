@@ -5,7 +5,7 @@
 
 using namespace std;
 
-unsigned short remaining_packet_length[] = {0b000001, 0b000001, 0b000010, 0b000001};
+unsigned short remaining_packet_length[] = {0b000100, 0b000011, 0b000010, 0b000001};
 unsigned short raddr[] = {0b0000000000, 0b0000000001, 0b0000000010, 0b0000000011};
 
 int main(int argc, const char ** argv, const char ** env) {
@@ -38,19 +38,22 @@ int main(int argc, const char ** argv, const char ** env) {
   for (time = 0 ; time < 1000; time += 10) {
     std::cout << "time: " << time << std::endl; 
     dut->clk = ((time % 20) >= 10) ? 0 : 1; // Simulate a 50 MHz clock
-    if ((time % 160) == 0) {
-        dut->wen = 1;
+    if (time > 80) {
+	if ((time % 160) == 0) {
+		dut->wen = 1;
         dut->remaining_packet_length = remaining_packet_length[iter];
         //dut->free_en = 0;
-        //dut->raddr = raddr[iter];
+        dut->raddr = raddr[iter];
 
 		iter++;
     } else if (time % 160 == 20) {
 		dut->wen = 0;
-		dut->remaining_packet_length = 0x000000;
-
-		iter++;
-    }
+    } else if (time % 160 == 40) {
+		dut->free_en = 1;
+	} else if (time % 160 == 60) {
+		dut->free_en = 0;
+	}
+	}
 
 	iter = (iter == 4) ? 0 : iter;
     dut->eval();     // Run the simulation for a cycle
