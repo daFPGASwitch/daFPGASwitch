@@ -66,56 +66,65 @@ module packet_gen #(
     case (state)
       `IDLE: begin
         next_state   = `LENGTH_DMAC_FST;
+        packet_gen_out = 0;
         packet_gen_out_en = 0;
+        next_remaining_length = remaining_length;
       end  //START
       `LENGTH_DMAC_FST: begin
         next_state   = `LENGTH_DMAC_SND;
         packet_gen_out       = {length_in_bits, DMAC[47:32]};
         packet_gen_out_en = 1;
+        next_remaining_length = remaining_length;
       end  // LENGTH_DMAC_FST
       `LENGTH_DMAC_SND: begin
         next_remaining_length = meta_out[27:22];
         next_state            = `TIME_FST;
         packet_gen_out                = DMAC[31:0];
         packet_gen_out_en          = 0;
+        next_remaining_length = remaining_length;
       end  // LENGTH_DMAC_SND
       `TIME_FST: begin
         next_state   = `TIME_SND;
         packet_gen_out       = {10'b0, meta_out[21:0]};
         packet_gen_out_en = 0;
+        next_remaining_length = remaining_length;
       end  // TIME_FST	
       `TIME_SND: begin
         next_state   = `SMAC_FST;
         packet_gen_out       = 32'b0;
         packet_gen_out_en = 0;
+        next_remaining_length = remaining_length;
       end  // TIME_SND
       `SMAC_FST: begin
         next_state   = `SMAC_SND;
         packet_gen_out       = {16'b0, SMAC[47:32]};
         packet_gen_out_en = 0;
+        next_remaining_length = remaining_length;
       end  //SMAC_FST
       `SMAC_SND: begin
         next_state   = `PAYLOAD;
         packet_gen_out       = SMAC[31:0];
         packet_gen_out_en = 0;
+        next_remaining_length = remaining_length;
       end  //SMAC_SND
       `PAYLOAD: begin
-        packet_gen_out       = ~32'b0;
-        packet_gen_out_en = 0;
-        if (remaining_length > 0) begin
-          next_remaining_length = remaining_length - 1;
-          next_state            = `PAYLOAD;
-        end // remaining_length > 0
-		else begin
-          next_state = `IDLE;  //UNDER QUESTION (GREATER THAN 0 OR GREATER THAN 1)
-        end  // else remaining_length < 0
-      end  // SRC_PAYLOAD	
+          if (remaining_length > 1) begin
+              next_remaining_length = remaining_length - 1;
+              next_state = `PAYLOAD;
+          end else begin
+              next_remaining_length = 0;
+              next_state = `IDLE;
+          end
+          packet_gen_out = ~32'b0;
+          packet_gen_out_en = 0;
+      end
       default: begin
         packet_gen_out_en = 0;
+        packet_gen_out = 0;
+        next_remaining_length = remaining_length;
+        next_state = state;
+
       end
-
-
-
     endcase  //end case
 
   end  // end always_comb
