@@ -27,7 +27,7 @@
 #include <linux/uaccess.h>
 #include <linux/types.h>
 
-#include "pack_driver.h"
+#include "da_driver.h"
 
 #define DRIVER_NAME "da_driver"
 
@@ -223,7 +223,7 @@ static int da_remove(struct platform_device *pdev)
 /* Which "compatible" string(s) to search for in the Device Tree */
 #ifdef CONFIG_OF
 static const struct of_device_id da_of_match[] = {
-	{ .compatible = "csee4840,da-1.0" },
+	{ .compatible = "csee4840,da_fpga_switch-1.0" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, da_of_match);

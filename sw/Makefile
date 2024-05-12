@@ -1,14 +1,14 @@
 ifneq (${KERNELRELEASE},)
 
 # KERNELRELEASE defined: we are being compiled as part of the Kernel
-	obj-m := pack_driver.o
+	obj-m := da_driver.o
 else
 
 # Compile the driver as a linux kernel module
 KERNEL_SOURCE := /usr/src/linux-headers-$(shell uname -r)
 PWD := $(shell pwd)/driver
 
-default: module daFPGASwitch
+default: clean module daFPGASwitch
 
 module:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} modules
