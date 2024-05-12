@@ -80,35 +80,35 @@ module packet_gen #(
         next_remaining_length = meta_out[27:22];
         next_state            = `TIME_FST;
         packet_gen_out                = DMAC[31:0];
-        packet_gen_out_en          = 0;
+        packet_gen_out_en          = 1;
         next_remaining_length = remaining_length;
       end  // LENGTH_DMAC_SND
       `TIME_FST: begin
         next_state   = `TIME_SND;
         packet_gen_out       = {10'b0, meta_out[21:0]};
-        packet_gen_out_en = 0;
+        packet_gen_out_en = 1;
         next_remaining_length = remaining_length;
       end  // TIME_FST	
       `TIME_SND: begin
         next_state   = `SMAC_FST;
         packet_gen_out       = 32'b0;
-        packet_gen_out_en = 0;
+        packet_gen_out_en = 1;
         next_remaining_length = remaining_length;
       end  // TIME_SND
       `SMAC_FST: begin
         next_state   = `SMAC_SND;
         packet_gen_out       = {16'b0, SMAC[47:32]};
-        packet_gen_out_en = 0;
+        packet_gen_out_en = 1;
         next_remaining_length = remaining_length;
       end  //SMAC_FST
       `SMAC_SND: begin
         next_state   = `PAYLOAD;
         packet_gen_out       = SMAC[31:0];
-        packet_gen_out_en = 0;
+        packet_gen_out_en = 1;
         next_remaining_length = remaining_length;
       end  //SMAC_SND
       `PAYLOAD: begin
-          if (remaining_length > 1) begin
+          if (remaining_length > 0) begin
               next_remaining_length = remaining_length - 1;
               next_state = `PAYLOAD;
           end else begin
@@ -116,7 +116,7 @@ module packet_gen #(
               next_state = `IDLE;
           end
           packet_gen_out = ~32'b0;
-          packet_gen_out_en = 0;
+          packet_gen_out_en = 1;
       end
       default: begin
         packet_gen_out_en = 0;
@@ -142,8 +142,8 @@ module packet_gen #(
         end_idx <= (end_idx == 1023) ? 0 : end_idx + 1;
 
       end  //packet_gen_in_en
-      if (experimenting && (start_idx != end_idx)) begin
-        if (state == `IDLE) begin
+      if (experimenting) begin
+        if (next_state == `IDLE) begin
           start_idx <= (start_idx != 1023) ? start_idx + 1 : 0;
         end
         state <= next_state;
