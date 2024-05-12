@@ -62,22 +62,22 @@ static void write_packet_meta(packet_meta_t *meta)
     }
     switch (src_port) {
         case 0:
-			printk(KERN_INFO "DAWRITE0 %u", pm);
+			printk(KERN_INFO "DAWRITE0 %u", *meta);
             iowrite32(*meta, META_DATA_0(dev.virtbase));
             dev.packet_data[0] = *meta;
             break;
         case 1:
-			printk(KERN_INFO "DAWRITE1 %u", pm);
+			printk(KERN_INFO "DAWRITE1 %u", *meta);
             iowrite32(*meta, META_DATA_1(dev.virtbase));
             dev.packet_data[1] = *meta;
             break;
         case 2:
-			printk(KERN_INFO "DAWRITE2 %u", pm);
+			printk(KERN_INFO "DAWRITE2 %u", *meta);
             iowrite32(*meta, META_DATA_2(dev.virtbase));
             dev.packet_data[2] = *meta;
             break;
         case 3:
-			printk(KERN_INFO "DAWRITE3 %u", pm);
+			printk(KERN_INFO "DAWRITE3 %u", *meta);
             iowrite32(*meta, META_DATA_3(dev.virtbase));
             dev.packet_data[3] = *meta;
             break;
