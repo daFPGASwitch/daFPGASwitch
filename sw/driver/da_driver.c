@@ -32,11 +32,11 @@
 #define DRIVER_NAME "da_driver"
 
 /* Device registers */
-#define CTRL(x) (x) // Idle 0, sending 1, recv reset 2, 
-#define META_DATA_0(x) ((x)+4) // Metadata for port 0
-#define META_DATA_1(x) ((x)+8) // Metadata for port 1
-#define META_DATA_2(x) ((x)+12) // Metadata for port 2
-#define META_DATA_3(x) ((x)+16) // Metadata for port 3
+#define CTRL(x) ((packet_ctrl_t *)(x)) // Idle 0, sending 1, recv reset 2, 
+#define META_DATA_0(x) ((packet_meta_t *)(x)+1) // Metadata for port 0
+#define META_DATA_1(x) ((packet_meta_t *)(x)+2) // Metadata for port 1
+#define META_DATA_2(x) ((packet_meta_t *)(x)+3) // Metadata for port 2
+#define META_DATA_3(x) ((packet_meta_t *)(x)+4) // Metadata for port 3
 
 /*
  * Information about our device
