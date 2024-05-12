@@ -147,11 +147,9 @@ int main()
 	printf("Set CTRL register to 1\n");
     pkt_ctrl = 1;
 	set_ctrl_register(&pkt_ctrl);
+	print_packet_no_hw(&pkt_meta);
 
-	// dst=0, src=0, len=1, timestamp=10
-	printf("Sent %d packets to dst=%d, src=%d (length=%u)\n",
-			write_num_packets, dest, src, len);
-	set_all_packet_fields(&pkt_meta, dest, src, len);
+	set_all_packet_fields(&pkt_meta, 0, 0, 1);
     for (int i = 0; i < write_num_packets; i++) {
 		send_packet(&pkt_meta);
 		print_packet_no_hw(&pkt_meta);
@@ -159,18 +157,18 @@ int main()
 	num_sent += write_num_packets;
 
 	len = 2;
-	printf("Sent %d packets to dst=%d, src=%d (length=%u)\n",
-			write_num_packets, dest, src, len);
-	set_all_packet_fields(&pkt_meta, 1, 2, 1);
-	print_packet_no_hw(&pkt_meta);
+
+	set_all_packet_fields(&pkt_meta, 0, 0, 4);
     for (int i = 0; i < 4; i++)
         send_packet(&pkt_meta);
+		print_packet_no_hw(&pkt_meta);
 	num_sent += write_num_packets;
 
     // Change control register to reading/writing (CTRL=2)
 	printf("Set CTRL register to 2\n");
 	pkt_ctrl = 2;
 	set_ctrl_register(&pkt_ctrl);
+	print_packet_no_hw(&pkt_ctrl);
 
 	printf("Requested %d packets\n", num_sent);
 	for (int i = 0; i < 10; i++) {
