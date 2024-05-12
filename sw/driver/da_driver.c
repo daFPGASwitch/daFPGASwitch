@@ -45,8 +45,8 @@ struct da_driver_dev {
 	struct resource res; /* Resource: our registers */
 	void __iomem *virtbase; /* Where registers can be accessed in memory */
     /* Some states of our device */
-    unsigned long ctrl_state;
-    unsigned long packet_data[4];
+    packet_ctrl_t ctrl_state;
+    packet_meta_t packet_data[4];
 } dev;
 
 static unsigned int extract_port(packet_meta_t meta)
@@ -115,32 +115,33 @@ static long da_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
     // TODO: Verify this
     // We need to READ OUT Whatever's available from the 4 egress
     case DA_READ_PACKET_0:
-        pm = dev.packet_data[0];
+        pm = ioread32(META_DATA_0(dev.virtbase));
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
 		break;
     case DA_READ_PACKET_1:
-        pm = dev.packet_data[1];
+        pm = ioread32(META_DATA_1(dev.virtbase));
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
 		break;
     case DA_READ_PACKET_2:
-        pm = dev.packet_data[2];
+        pm = ioread32(META_DATA_2(dev.virtbase));
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
 		break;
     case DA_READ_PACKET_3:
-        pm = dev.packet_data[3];
+        pm = ioread32(META_DATA_3(dev.virtbase));
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
 		break;
 
 	case DA_READ_CTRL:
-	  	pc = dev.ctrl_state;
+	  	pc = ioread32(CTRL(dev.virtbase));
+		
 		if (copy_to_user((packet_ctrl_t *) arg, &pc,
 		        sizeof(packet_ctrl_t)))
 			return -EACCES;
