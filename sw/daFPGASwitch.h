@@ -1,6 +1,6 @@
 #ifndef _daFPGASwitch_H
 #define _daFPGASwitch_H
-#include <stdint>
+#include <stdint.h>
 #include "driver/pack_driver.h"
 
 typedef struct {
@@ -33,10 +33,10 @@ packet_meta_t set_src_port(packet_meta_t meta, uint32_t port) {
         default:
             break;
     }
-    return meta
+    return meta;
 }
 
-u32 set_dst_port(packet_meta_t meta, uint32_t port) {
+uint32_t set_dst_port(packet_meta_t meta, uint32_t port) {
     if (port > 3) {
         printf("Ports number should be btw 0 and 3");
         return meta;
