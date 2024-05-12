@@ -66,7 +66,7 @@ void print_packet(void *packet_data)
 {
 	unsigned int packet = *((unsigned int*) packet_data);
     if (ioctl(da_switch_fd, DA_READ_PACKET_0, packet_data)) {
-        // perror("ioctl(DA_READ_PACKET_0) failed");
+        perror("ioctl(DA_READ_PACKET_0) failed");
         return;
     }
 
@@ -81,7 +81,7 @@ void print_packet(void *packet_data)
 void set_ctrl_register(const packet_ctrl_t *pkt_ctrl)
 {
 	if (ioctl(da_switch_fd, DA_WRITE_CTRL, pkt_ctrl) < 0) {
-        // perror("ioctl(DA_WRITE_CTRL) set CTRL=1 failed\n");
+        perror("ioctl(DA_WRITE_CTRL) set CTRL=1 failed\n");
         close(da_switch_fd);
         return;
     }
@@ -90,7 +90,7 @@ void set_ctrl_register(const packet_ctrl_t *pkt_ctrl)
 void send_packet(const packet_meta_t *pkt_meta)
 {
     if (ioctl(da_switch_fd, DA_WRITE_PACKET, pkt_meta) < 0) {
-        // perror("Failed to send packet");
+        perror("Failed to send packet");
         return;
     }
 }
@@ -175,7 +175,7 @@ int main()
 	printf("Requested %d packets\n", num_sent);
 	for (int i = 0; i < num_sent; i++) {
     	if (ioctl(da_switch_fd, DA_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
-			// perror("ioctl read packet failed");
+			perror("ioctl read packet failed");
 			close(da_switch_fd);
 			return -1;
 		}
