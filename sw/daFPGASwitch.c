@@ -147,7 +147,7 @@ int main()
 	printf("Set CTRL register to 1\n");
     pkt_ctrl = 1;
 	set_ctrl_register(&pkt_ctrl);
-	print_packet_no_hw(&pkt_meta);
+	print_packet_no_hw(&pkt_ctrl);
 
 	set_all_packet_fields(&pkt_meta, 0, 0, 1);
     for (int i = 0; i < write_num_packets; i++) {

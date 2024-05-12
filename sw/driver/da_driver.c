@@ -61,19 +61,23 @@ static void write_packet_meta(packet_meta_t *meta)
         printk(KERN_ERR "Port numbers should be btwn 0 and 3");
     }
     switch (src_port) {
-        case 0: 
+        case 0:
+			printk(KERN_INFO "DAWRITE0 %u", pm);
             iowrite32(*meta, META_DATA_0(dev.virtbase));
             dev.packet_data[0] = *meta;
             break;
         case 1:
+			printk(KERN_INFO "DAWRITE1 %u", pm);
             iowrite32(*meta, META_DATA_1(dev.virtbase));
             dev.packet_data[1] = *meta;
             break;
         case 2:
+			printk(KERN_INFO "DAWRITE2 %u", pm);
             iowrite32(*meta, META_DATA_2(dev.virtbase));
             dev.packet_data[2] = *meta;
             break;
         case 3:
+			printk(KERN_INFO "DAWRITE3 %u", pm);
             iowrite32(*meta, META_DATA_3(dev.virtbase));
             dev.packet_data[3] = *meta;
             break;
@@ -116,6 +120,7 @@ static long da_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
     // We need to READ OUT Whatever's available from the 4 egress
     case DA_READ_PACKET_0:
         pm = ioread32(META_DATA_0(dev.virtbase));
+		printk(KERN_INFO "DAREAD0 %u", pm);
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
