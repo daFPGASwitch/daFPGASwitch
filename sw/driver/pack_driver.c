@@ -51,7 +51,7 @@ struct da_driver_dev {
 
 static unsigned int extract_port(packet_meta_t meta)
 {
-    return value >> 30;
+    return meta >> 30;
 }
 
 static void write_packet_meta(packet_meta_t *meta)
