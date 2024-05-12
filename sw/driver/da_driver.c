@@ -45,8 +45,8 @@ struct da_driver_dev {
 	struct resource res; /* Resource: our registers */
 	void __iomem *virtbase; /* Where registers can be accessed in memory */
     /* Some states of our device */
-    unsigned long ctrl_state;
-    unsigned long packet_data[4];
+    unsigned int ctrl_state;
+    unsigned int packet_data[4];
 } dev;
 
 static unsigned int extract_port(packet_meta_t meta)

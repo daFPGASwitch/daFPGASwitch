@@ -137,7 +137,7 @@ void set_all_packet_fields(packet_meta_t *pkt_meta, unsigned int dst,
 int main()
 {
     int write_num_packets = 2, num_sent = 0;
-	unsigned int dest = 0, src = 0, len = 1, t_delta = 10;
+	unsigned int dest = 1, src = 2, len = 1, t_delta = 10;
     packet_meta_t pkt_meta, rcvd_pkt_meta;
     packet_ctrl_t pkt_ctrl;
 
@@ -158,12 +158,12 @@ int main()
 	}
 	num_sent += write_num_packets;
 
-	len = 2;
+	len = 4;
 	printf("Sent %d packets to dst=%d, src=%d (length=%u)\n",
 			write_num_packets, dest, src, len);
 	set_all_packet_fields(&pkt_meta, dest, src, len);
 	print_packet_no_hw(&pkt_meta);
-    for (int i = 0; i < write_num_packets; i++)
+    for (int i = 0; i < 4; i++)
         send_packet(&pkt_meta);
 	num_sent += write_num_packets;
 
@@ -172,7 +172,7 @@ int main()
 	pkt_ctrl = 2;
 	set_ctrl_register(&pkt_ctrl);
 
-	printf("Requested %d packets\n", num_sent);
+	printf("Requested %d packets\n", 6);
 	for (int i = 0; i < num_sent; i++) {
     	if (ioctl(da_switch_fd, DA_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
