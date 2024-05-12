@@ -143,7 +143,7 @@ module packet_val #(
         next_DMAC = DMAC;
       end  //SMAC_SND
       `PAYLOAD: begin
-        if (remaining_length > 0) begin
+        if (remaining_length > 4) begin
           next_remaining_length = remaining_length - 4;
           next_state            = `PAYLOAD;
           meta_ready            = 0;
