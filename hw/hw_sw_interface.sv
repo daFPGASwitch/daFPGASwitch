@@ -1,5 +1,4 @@
-module hw_sw_interface #(
-) (
+module hw_sw_interface(
     input logic clk,
 
     // From sw
