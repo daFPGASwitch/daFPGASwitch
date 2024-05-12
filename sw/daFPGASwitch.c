@@ -51,7 +51,7 @@ void open_da_device()
 
 void print_packet_no_hw(void *packet_data)
 {
-	uint32_t packet = *((uint32_t*) packet_data);
+	unsigned int packet = *((unsigned int*) packet_data);
 	
     printf("\tmetadata (0x%X): [%u | %u | %u | %u]\n",
 		packet,
@@ -64,7 +64,7 @@ void print_packet_no_hw(void *packet_data)
 
 void print_packet(void *packet_data)
 {
-	uint32_t packet = *((uint32_t*) packet_data);
+	unsigned int packet = *((unsigned int*) packet_data);
     if (ioctl(da_switch_fd, DA_READ_PACKET_0, packet_data)) {
         // perror("ioctl(DA_READ_PACKET_0) failed");
         return;
@@ -122,8 +122,8 @@ void set_packet_length(packet_meta_t *pkt_meta, unsigned int length)
 }
 
 
-void set_all_packet_fields(packet_meta_t *pkt_meta, uint32_t dst, 
-						   			 uint32_t src, uint32_t length)
+void set_all_packet_fields(packet_meta_t *pkt_meta, unsigned int dst, 
+						   			 unsigned int src, unsigned int length)
 {
 	packet_meta_t pkt_tmp;
 	*pkt_meta = 0;
@@ -137,7 +137,7 @@ void set_all_packet_fields(packet_meta_t *pkt_meta, uint32_t dst,
 int main()
 {
     int write_num_packets = 2, num_sent = 0;
-	uint32_t dest = 0, src = 0, len = 1, t_delta = 10;
+	unsigned int dest = 0, src = 0, len = 1, t_delta = 10;
     packet_meta_t pkt_meta, rcvd_pkt_meta;
     packet_ctrl_t pkt_ctrl;
 
