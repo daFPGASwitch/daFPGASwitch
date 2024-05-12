@@ -174,13 +174,12 @@ int main()
 
 	printf("Requested %d packets\n", 6);
 	for (int i = 0; i < 10; i++) {
-        sleep(1);
     	if (ioctl(da_switch_fd, DA_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(da_switch_fd);
 			return -1;
 		}
-		print_packet_no_hw(&rcvd_pkt_meta);
+		print_packet(&rcvd_pkt_meta);
 	}
 
     close(da_switch_fd);
