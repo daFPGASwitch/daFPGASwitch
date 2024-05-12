@@ -180,7 +180,7 @@ int main()
 			close(da_switch_fd);
 			return -1;
 		}
-		print_packet(&rcvd_pkt_meta);
+		print_packet_no_hw(&rcvd_pkt_meta);
 	}
 
     close(da_switch_fd);
