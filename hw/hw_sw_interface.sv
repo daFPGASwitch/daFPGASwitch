@@ -75,7 +75,6 @@ module hw_sw_interface(
         // interface_out_en[2] <= 0;
         // interface_out_en[3] <= 0;
         interface_out_en <= 0;
-        interface_out <= 0;
       end
       if (chipselect && read) begin
         readdata <= interface_in;
@@ -101,7 +100,6 @@ module hw_sw_interface(
           end
         endcase
       end else begin
-        readdata <= 0;
         interface_out_ack <= 0;
         // interface_out_ack[0] <= 0;
         // interface_out_ack[1] <= 0;
