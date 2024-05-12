@@ -30,7 +30,7 @@
 
 #define MIN_PORT_NUM 0
 #define MAX_PORT_NUM 3
-#define DEVICE_PATH "/dev/daFPGASwitch"
+#define DEVICE_PATH "/dev/da_driver"
 
 
 int da_switch_fd;
