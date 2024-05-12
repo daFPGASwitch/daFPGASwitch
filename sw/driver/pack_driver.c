@@ -49,12 +49,12 @@ struct da_driver_dev {
     unsigned long packet_data[4];
 } dev;
 
-static unsigned int extract_port(unsigned int value)
+static unsigned int extract_port(packet_meta_t meta)
 {
     return value >> 30;
 }
 
-static void write_packet_meta(pack_meta_t *meta)
+static void write_packet_meta(packet_meta_t *meta)
 {
     unsigned int src_port = extract_port(*meta);
     if (src_port > 3) {
@@ -171,7 +171,7 @@ static struct miscdevice da_misc_device = {
  */
 static int __init da_probe(struct platform_device *pdev)
 {
-    pack_ctrl_t ctrl = 0;
+    packet_ctrl_t ctrl = 0;
 
 	int ret;
 
