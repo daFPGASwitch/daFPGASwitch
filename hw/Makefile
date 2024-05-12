@@ -1,94 +1,255 @@
-.PHONY: lint
+SYSTEM = soc_system
 
-PACKET_VAL_FILES = packet_val.sv simple_dual_port_mem.sv port_to_mac.sv mac_to_port.sv
-TOP_FILES = da_fpga_switch.sv packet_gen.sv hw_sw_interface.sv simple_dual_port_mem.sv port_to_mac.sv packet_val.sv mac_to_port.sv
-CMU_FILES = cmu.sv true_dual_port_mem.sv
-PACKET_GEN_FILES = packet_gen.sv simple_dual_port_mem.sv port_to_mac.sv
-SVFILES = cmu.sv sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv crossbar.sv
-SCHED_FILES = sched.sv pick_voq.sv
+TCL = $(SYSTEM).tcl
+QSYS = $(SYSTEM).qsys
+SOPCINFO = $(SYSTEM).sopcinfo
+QIP = $(SYSTEM)/synthesis/$(SYSTEM).qip
+HPS_PIN_TCL = $(SYSTEM)/synthesis/submodules/hps_sdram_p0_pin_assignments.tcl
+HPS_PIN_MAP = hps_sdram_p0_all_pins.txt
+QPF = $(SYSTEM).qpf
+QSF = $(SYSTEM).qsf
+SDC = $(SYSTEM).sdc
 
-# Run Verilator simulations
+BOARD_INFO = $(SYSTEM)_board_info.xml
+DTS = $(SYSTEM).dts
+DTB = $(SYSTEM).dtb
 
-default:
-	@echo "No target given. Try:"
-	@echo ""
-	@echo "make pick_voq"
-	@echo "make crossbar"
-	@echo "make sched.vcd"
-	@echo "make vmu.vcd"
-	@echo "make cmu.vcd"
-	@echo "make lint"
-	@echo "make packet_gen.vcd"
+SOF = output_files/$(SYSTEM).sof
+RBF = output_files/$(SYSTEM).rbf
 
-packet_val.vcd : obj_dir/Vpacket_val
-		obj_dir/Vpacket_val
+SOFTWARE_DIR = software
 
-da_fpga_switch.vcd : obj_dir/Vda_fpga_switch
-		obj_dir/Vda_fpga_switch
+BSP_DIR = $(SOFTWARE_DIR)/spl_bsp
+BSP_SETTINGS = $(BSP_DIR)/settings.bsp
+PRELOADER_SETTINGS_DIR = hps_isw_handoff/soc_system_hps_0
+PRELOADER_MAKEFILE = $(BSP_DIR)/Makefile
+PRELOADER_MKPIMAGE = $(BSP_DIR)/preloader-mkpimage.bin
 
-packet_gen.vcd : obj_dir/Vpacket_gen
-		obj_dir/Vpacket_gen
+UBOOT_IMAGE = $(BSP_DIR)/uboot-socfpga/u-boot.img
 
-pick_voq : obj_dir/Vpick_voq
-	(obj_dir/Vpick_voq && echo "SUCCESS") || echo "FAILED"
+KERNEL_REPO = https://github.com/altera-opensource/linux-socfpga.git
+KERNEL_BRANCH = socfpga-4.19
+DEFAULT_CONFIG = socfpga_defconfig
+CROSS = env CROSS_COMPILE=arm-altera-eabi- ARCH=arm
 
-crossbar: obj_dir/Vcrossbar
-	(obj_dir/Vcrossbar && echo "SUCCESS") || echo "FAILED"
+KERNEL_DIR = $(SOFTWARE_DIR)/linux-socfpga
+KERNEL_CONFIG = $(KERNEL_DIR)/.config
+ZIMAGE = $(KERNEL_DIR)/arch/arm/boot/zImage
 
-cmu.vcd : obj_dir/Vcmu
-	obj_dir/Vcmu
+TARFILES = Makefile \
+	$(TCL) \
+	$(QSYS) \
+	$(SYSTEM)_top.sv \
+	$(BOARD_INFO) \
+	ip/intr_capturer/intr_capturer.v \
+	ip/intr_capturer/intr_capturer_hw.tcl \
+	vga_ball.sv
 
-sched.vcd : obj_dir/Vsched
-	obj_dir/Vsched
+TARFILE = lab3-hw.tar.gz
 
-vmu.vcd : obj_dir/Vvmu
-	obj_dir/Vvmu
+# project
+#
+# Run the topmost tcl script to generate the initial project files
 
-obj_dir/Vda_fpga_switch : $(TOP_FILES) verilator/da_fpga_switch.cpp
-	verilator -trace -Wall -cc $(TOP_FILES) -exe verilator/da_fpga_switch.cpp \
-		-top-module da_fpga_switch
-	cd obj_dir && make -j -f Vda_fpga_switch.mk
+.PHONY : project
+project : $(QPF) $(QSF) $(SDC)
 
+$(QPF) $(QSF) $(SDC) : $(TCL)
+	quartus_sh -t $(TCL)
 
-obj_dir/Vpacket_val : $(PACKET_VAL_FILES) verilator/packet_val.cpp
-	verilator -trace -Wall -cc $(PACKET_VAL_FILES) -exe verilator/packet_val.cpp \
-		-top-module packet_val
-	cd obj_dir && make -j -f Vpacket_val.mk
+# qsys
+#
+# From the .qsys file, generate the .sopcinfo, .qip, and directory
+# (named according to the system) with all the Verilog files, etc.
 
-obj_dir/Vpacket_gen : $(PACKET_GEN_FILES) verilator/packet_gen.cpp
-	verilator -trace -Wall -cc $(PACKET_GEN_FILES) -exe verilator/packet_gen.cpp \
-		-top-module packet_gen
-	cd obj_dir && make -j -f Vpacket_gen.mk
+.PHONY : qsys
+qsys : $(SOPCINFO)
 
-obj_dir/Vcmu : $(CMU_FILES) verilator/cmu.cpp
-	verilator -trace -Wall -cc $(CMU_FILES) -exe verilator/cmu.cpp \
-		-top-module cmu
-	cd obj_dir && make -j -f Vcmu.mk
+$(SOPCINFO) $(QIP) $(HPS_PIN_TCL) $(SYSTEM)/ $(PRELOADER_SETTINGS_DIR) : $(QSYS)
+	rm -rf $(SOPCINFO) $(SYSTEM)/
+	qsys-generate $(QSYS) --synthesis=VERILOG
 
-obj_dir/Vpick_voq : pick_voq.sv verilator/pick_voq.cpp
-	verilator -Wall -cc pick_voq.sv -exe verilator/pick_voq.cpp \
-		-top-module pick_voq
-	cd obj_dir && make -j -f Vpick_voq.mk
+# quartus
+#
+# Run Quartus on the Qsys-generated files
+#
+#    Build netlist
+# quartus_map soc_system
+#
+#    Use netlist information to determine HPS stuff
+# quartus_sta -t hps_sdram_p0_pin_assignments.tcl soc_system
+#
+#    Do the rest
+#   FIXME: this is wasteful.  Really want not to repeat the "map" step
+# quartus_sh --flow compile 
+#
+# quartus_fit
+# quartus_asm
+# quartus_sta
 
-obj_dir/Vcrossbar : crossbar.sv verilator/crossbar.cpp
-	verilator -Wall -cc crossbar.sv -exe verilator/crossbar.cpp \
-		-top-module crossbar
-	cd obj_dir && make -j -f Vcrossbar.mk
+.PHONY : quartus
+quartus : $(SOF)
 
-obj_dir/Vsched : $(SCHED_FILES) verilator/sched.cpp
-	verilator -trace -Wall -cc sched.sv pick_voq.sv -exe verilator/sched.cpp \
-		-top-module sched
-	cd obj_dir && make -j -f Vsched.mk
+$(SOF) $(HPS_PIN_MAP) : $(QIP) $(QPF) $(QSF) $(HPS_PIN_TCL)
+	quartus_map $(SYSTEM)
+	quartus_sta -t $(HPS_PIN_TCL) $(SYSTEM)
+	quartus_fit $(SYSTEM)
+	quartus_asm $(SYSTEM)
+#	quartus_sh --flow compile $(QPF)
 
-obj_dir/Vvmu : vmu.sv simple_dual_port_mem.sv verilator/vmu.cpp
-	verilator -trace -Wall -cc vmu.sv simple_dual_port_mem.sv -exe verilator/vmu.cpp \
-		-top-module vmu
-	cd obj_dir && make -j -f Vvmu.mk
+# rbf
+#
+# Convert the .sof file (for programming through the USB blaster)
+# to an .rbf file to be placed on an SD card and written by u-boot
+.PHONY : rbf
+rbf : $(RBF)
 
-lint :
-	for file in $(SVFILES); do \
-	verilator --lint-only -Wall $$file; done
+$(RBF) : $(SOF)
+	quartus_cpf -c $(SOF) $(RBF)
 
-clean :
-	rm -rf obj_dir db incremental_db output_files \
-	lab1.qpf lab1.qsf lab1.sdc lab1.qws c5_pin_model_dump.txt
+# dtb
+#
+# Use the .sopcinfo file to generate a device tree blob file
+# with information about the memory map of the peripherals
+.PHONY : dtb
+dtb : $(DTB)
+
+$(DTB) : $(DTS)
+	@which dtc || (echo "dtc not found.  Did you run embedded_command_shell.sh?"; exit 1)
+	dtc -I dts -O dtb -o $(DTB) $(DTS)
+
+$(DTS) : $(SOPCINFO) $(BOARD_INFO)
+	@which sopc2dts || (echo "sopc2dts not found.  Did you run embedded_command_shell.sh?"; exit 1)
+	sopc2dts --input $(SOPCINFO) \
+		--output $(DTS) \
+		--type dts \
+		--board $(BOARD_INFO) \
+		--clocks
+
+# preloader
+#
+# Builds the SPL's preloader-mkpimage.bin image file, which should
+# be written to the "magic" 3rd parition on the SD card
+# in software/spl_bsp
+#
+# Requires the embedded_command_shell.sh script to have run so the compiler,
+# etc is available
+#
+.PHONY : preloader
+preloader : $(PRELOADER_MKPIMAGE)
+
+$(PRELOADER_MKPIMAGE) : $(PRELOADER_MAKEFILE) $(BSP_SETTINGS)
+	$(MAKE) -C $(BSP_DIR)
+
+$(BSP_SETTINGS) $(PRELOADER_MAKEFILE) : $(PRELOADER_SETTINGS_DIR)
+	mkdir -p $(BSP_DIR)
+	bsp-create-settings \
+	  --type spl \
+	  --bsp-dir $(BSP_DIR) \
+	  --settings $(BSP_SETTINGS) \
+	  --preloader-settings-dir $(PRELOADER_SETTINGS_DIR) \
+	  --set spl.boot.FAT_SUPPORT 1
+
+# uboot
+#
+# Build the bootloader
+
+.PHONY : uboot
+uboot : $(UBOOT_IMAGE)
+
+$(UBOOT_IMAGE) : $(PRELOADER_MAKEFILE) $(BSP_SETTINGS)
+	$(MAKE) -C $(BSP_DIR) uboot
+
+# kernel-download
+#
+# Clone the Linux kernel repository
+#
+# kernel-config
+#
+#   Set up the default kernel configuration
+#
+# kernel-menuconfig
+#
+#   (Optional) Access the kernel configuration menu to make further
+#   adjustments about which modules are included
+#
+# zimage
+#
+#   Compile the kernel
+
+.PHONY : download-kernel config-kernel zimage
+kernel-download : $(KERNEL_DIR)
+kernel-config : $(KERNEL_CONFIG)
+kernel-menuconfig :
+	$(CROSS) $(MAKE) -C $(KERNEL_DIR) menuconfig
+zimage : $(ZIMAGE)
+
+$(KERNEL_DIR) :
+	mkdir -p $(KERNEL_DIR)
+	git clone --branch $(KERNEL_BRANCH) $(KERNEL_REPO) $(KERNEL_DIR)
+
+# Configure the kernel.  Start from a provided default,
+# 
+# Turn off version checking (makes it easier to compile kernel
+# modules and not have them complain about version)
+#
+# Turn on large file (+2TB) support, which the ext4 filesystem
+# requires by default (it will not be able to mount the root
+# filesystem read/write otherwise)
+$(KERNEL_CONFIG) : $(KERNEL_DIR)
+	$(CROSS) $(MAKE) -C $(KERNEL_DIR) $(DEFAULT_CONFIG)
+	$(KERNEL_DIR)/scripts/config --file $(KERNEL_CONFIG) \
+	  --disable CONFIG_LOCALVERSION_AUTO \
+	  --enable CONFIG_LBDAF \
+	  --disable CONFIG_XFS_FS \
+	  --disable CONFIG_GFS2_FS \
+	  --disable CONFIG_TEST_KMOD
+
+# Compile the kernel
+
+$(ZIMAGE) : $(KERNEL_CONFIG)
+	$(CROSS) $(MAKE) -C $(KERNEL_DIR) LOCALVERSION= zImage
+
+# tar
+#
+# Build soc_system.tar.gz
+
+.phony : tar
+tar : $(TARFILE)
+
+$(TARFILE) : $(TARFILES)
+	tar zcfC $(TARFILE) .. $(TARFILES:%=lab3-hw/%)
+
+# clean
+#
+# Remove all generated files
+
+.PHONY : clean quartus-clean qsys-clean project-clean
+clean : quartus-clean qsys-clean project-clean dtb-clean preloader-clean \
+	uboot-clean
+
+project-clean :
+	rm -rf $(QPF) $(QSF) $(SDC)
+
+qsys-clean :
+	rm -rf $(SOPCINFO) $(QIP) $(SYSTEM)/ .qsys_edit \
+	hps_isw_handoff/ hps_sdram_p0_summary.csv
+
+quartus-clean :
+	rm -rf  $(SOF) output_files db incremental_db $(SYSTEM).qdf \
+	c5_pin_model_dump.txt $(HPS_PIN_MAP)
+
+dtb-clean :
+	rm -rf $(DTS) $(DTB)
+
+preloader-clean :
+	rm -rf $(BSP_DIR)
+
+uboot-clean :
+	rm -rf $(BSP_DIR)/uboot-socfpga
+
+kernel-clean :
+	rm -rf $(KERNEL_DIR)
+
+config-clean :
+	rm -rf $(KERNEL_CONFIG)

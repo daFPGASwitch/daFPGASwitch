@@ -1,5 +1,5 @@
 `include "switch_defs.svh"
-module da_fpga_switch #()
+module da_fpga_switch
 (
     // From sw
     input logic clk,
