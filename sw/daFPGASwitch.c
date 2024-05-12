@@ -171,7 +171,8 @@ int main()
 	print_packet_no_hw(&pkt_ctrl);
 
 	printf("Requested %d packets\n", num_sent);
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 100; i++) {
+        sleep(0.1);
     	if (ioctl(da_switch_fd, DA_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(da_switch_fd);
