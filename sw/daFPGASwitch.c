@@ -161,7 +161,7 @@ int main()
 	len = 2;
 	printf("Sent %d packets to dst=%d, src=%d (length=%u)\n",
 			write_num_packets, dest, src, len);
-	set_all_packet_fields(&pkt_meta, dest, 2, 1);
+	set_all_packet_fields(&pkt_meta, 1, 2, 1);
 	print_packet_no_hw(&pkt_meta);
     for (int i = 0; i < 4; i++)
         send_packet(&pkt_meta);
@@ -179,7 +179,7 @@ int main()
 			close(da_switch_fd);
 			return -1;
 		}
-		print_packet(&rcvd_pkt_meta);
+		print_packet_nohw(&rcvd_pkt_meta);
 	}
 
     close(da_switch_fd);
