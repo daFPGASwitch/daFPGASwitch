@@ -49,6 +49,18 @@ int main(int argc, const char ** argv, const char ** env) {
       dut -> chipselect = 0;
     }
 
+  if (time == 540) {
+      dut->chipselect = 1;
+      dut->address = 1;
+      dut -> write = 1;
+      dut -> read  = 0;
+      dut->writedata  = 0b01110000100000000000000000000000;
+    }
+    if (time == 560) {
+      dut -> chipselect = 0;
+    }
+
+
     if(time == 1000) {
       dut -> write = 1;
       dut -> chipselect = 1;
@@ -67,6 +79,16 @@ int main(int argc, const char ** argv, const char ** env) {
       dut -> address = 1;
     }
     if(time == 2020) {
+      dut -> chipselect = 0;
+    }
+
+    if(time == 3000) {
+      dut -> write = 0;
+      dut -> chipselect = 1;
+      dut -> read = 1;
+      dut -> address = 1;
+    }
+    if(time == 3020) {
       dut -> chipselect = 0;
     }
 
