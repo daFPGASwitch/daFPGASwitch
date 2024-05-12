@@ -130,7 +130,7 @@ void set_all_packet_fields(packet_meta_t *pkt_meta, unsigned int dst,
 
 	set_packet_length(pkt_meta, length);
 	*pkt_meta = set_dst_port(*pkt_meta, dst);
-	*pkt_meta = set_dst_port(*pkt_meta, src);
+	*pkt_meta = set_src_port(*pkt_meta, src);
 }
 
 
@@ -173,7 +173,7 @@ int main()
 	set_ctrl_register(&pkt_ctrl);
 
 	printf("Requested %d packets\n", 6);
-	for (int i = 0; i < num_sent; i++) {
+	for (int i = 0; i < 10; i++) {
     	if (ioctl(da_switch_fd, DA_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(da_switch_fd);

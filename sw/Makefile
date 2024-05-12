@@ -8,7 +8,7 @@ else
 KERNEL_SOURCE := /usr/src/linux-headers-$(shell uname -r)
 PWD := $(shell pwd)/driver
 
-default: module daFPGASwitch
+default: clean module daFPGASwitch
 
 module:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} modules
