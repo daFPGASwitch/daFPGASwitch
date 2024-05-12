@@ -13,7 +13,14 @@ default: module daFPGASwtich
 module:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} modules
 
+
+daFPGASwitch.o:
+	cc -c daFPGASwitch.c
+
+daFPGASwitch: daFPGASwitch.o
+	cc -o daFPGASwitch daFPGASwitch.o
+
 clean:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} clean
-	${RM} daFPGASwitch
+	${RM} daFPGASwitch daFPGASwitch.o
 endif
