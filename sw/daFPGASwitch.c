@@ -89,6 +89,7 @@ void set_ctrl_register(const packet_ctrl_t *pkt_ctrl)
 
 void send_packet(const packet_meta_t *pkt_meta)
 {
+    sleep(1);
     if (ioctl(da_switch_fd, DA_WRITE_PACKET, pkt_meta) < 0) {
         perror("Failed to send packet");
         return;
