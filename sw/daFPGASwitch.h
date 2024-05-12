@@ -1,6 +1,6 @@
 #ifndef _daFPGASwitch_H
 #define _daFPGASwitch_H
-#include "driver/pack_driver.h"
+#include "driver/da_driver.h"
 
 packet_meta_t set_src_port(packet_meta_t meta, unsigned int port) {
     if (port > 3) {

@@ -1,7 +1,7 @@
 ifneq (${KERNELRELEASE},)
 
 # KERNELRELEASE defined: we are being compiled as part of the Kernel
-	obj-m := pack_driver.o
+	obj-m := da_driver.o
 else
 
 # Compile the driver as a linux kernel module
