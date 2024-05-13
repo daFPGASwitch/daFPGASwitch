@@ -34,10 +34,13 @@ module ingress (
 	
 	logic [5:0]  next_remaining_packet_length, remaining_packet_length;
 	logic [31:0] temp_packet_in;
+	/* verilator lint_off UNOPTFLAT */
 	logic 		 alloc_en;
 	logic [47:0] d_mac, next_d_mac;
 	logic [31:0] packet_start_time_logic;
 	logic [3:0]  in_state, next_in_state;
+	/* verilator lint_on UNOPTFLAT */
+
 	logic [12:0] curr_d_write, curr_d_read;
 	logic        voq_enqueue_en;
 	logic [1:0]  voq_enqueue_sel, port_number;
@@ -46,7 +49,7 @@ module ingress (
 
 
 	logic[9:0]	alloc_addr;
-	logic[9:0]	meta_in;
+	logic[9:0]	meta_in, meta_out;
 	assign meta_in = (first_packet == 1) ? 10'b1 : alloc_addr;
 	/* States */
 
@@ -70,8 +73,10 @@ module ingress (
 	logic [9:0] free_addr, next_free_addr, voq_meta_out, voq_meta_out_reg, free_addr_reg, next_free_addr_reg;
 	logic [3:0] is_empty, is_full;
 	logic        voq_dequeue_en;
-	logic [1:0]  voq_dequeue_sel;
+	//logic [1:0]  voq_dequeue_sel;
 
+	logic [12:0] data_read_addr;
+	assign data_read_addr = {3'b000, voq_meta_out} << 2;
 
 	always_comb begin
 		case (in_state)
@@ -97,8 +102,6 @@ module ingress (
 				packet_start_time_logic      = curr_time;
 				next_in_state 				 = `IN_1;
 				curr_d_write				 = (first_packet == 1) ? 13'b1 : start_addr;
-				next_in_state 				 = `IN_0;
-				curr_d_write				 = (first_packet == 0) ? 1 : alloc_addr;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -111,8 +114,6 @@ module ingress (
 				next_in_state 				 = `IN_2;
 				curr_d_write				 = start_addr+1;
 				start_addr_reg               = start_addr;
-				next_in_state 				 = `IN_1;
-				curr_d_write				 = alloc_addr+1;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -123,8 +124,6 @@ module ingress (
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_3;
 				curr_d_write				 = start_addr+2;
-				next_in_state				 = `IN_2;
-				curr_d_write				 = alloc_addr+2;
 				voq_enqueue_en               = 1;
 				voq_enqueue_sel              = port_number;
 				
@@ -136,8 +135,6 @@ module ingress (
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_4;
 				curr_d_write				 = start_addr+3;
-				next_in_state				 = `IN_3;
-				curr_d_write				 = alloc_addr+3;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -148,8 +145,6 @@ module ingress (
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_5;
 				curr_d_write				 = start_addr+4;
-				next_in_state				 = `IN_4;
-				curr_d_write				 = alloc_addr+4;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -160,8 +155,6 @@ module ingress (
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_6;
 				curr_d_write				 = start_addr+5;
-				next_in_state				 = `IN_5;
-				curr_d_write				 = alloc_addr+5;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -172,8 +165,6 @@ module ingress (
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_7;
 				curr_d_write				 = start_addr+6;
-				next_in_state				 = `IN_6;
-				curr_d_write				 = alloc_addr+6;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -189,19 +180,7 @@ module ingress (
 				next_remaining_packet_length = remaining_packet_length - 1;
 				next_d_mac 					 = d_mac;
 				temp_packet_in 				 = packet_in;
-				if(remaining_packet_length > 0) begin	
-					next_remaining_packet_length = remaining_packet_length - 1;
-					next_in_state                   = `IN_6;
-					next_d_mac 					 = d_mac;
-					temp_packet_in 				 = packet_in;
-
-				end else begin 
-					next_remaining_packet_length = 0;
-					next_in_state 					 = `IN_IDLE;
-					next_d_mac 					 = 48'b0;
-					temp_packet_in 				 = 32'b0;
-
-				end
+				
 				if((curr_time - packet_start_time_logic) % 8 == 0) begin
 					alloc_en 					 = 1;
 					curr_d_write				 = start_addr;
@@ -210,12 +189,9 @@ module ingress (
 					curr_d_write				 = start_addr_reg + 7;
 					//start_addr_reg               = start_addr;
 				end else begin 
-					alloc_en = 1;
-					curr_d_write				 = alloc_addr;
-				end /*else begin
 					alloc_en = 0;
-					curr_d_write				 = alloc_addr + ((curr_time - packet_start_time_logic) % 8);
-				end*/
+					curr_d_write				 = start_addr + offset_addr[12:0];
+				end
 				
 
 			end
@@ -229,27 +205,34 @@ module ingress (
 				voq_meta_out_reg = meta_out;
 				next_send_cycle_counter = 0;
 				next_out_state = (sched_done) ? `SEND_META_2_CMU : `IDLE; // no packet or no decision
+				packet_out_en = 0;
 			end
 			`SEND_META_2_CMU: begin
 				free_en = 1'b1;
 				free_addr = voq_meta_out;
-				curr_d_read = voq_meta_out;
+				curr_d_read = data_read_addr;
 			
 				next_send_cycle_counter = 1;
 				next_out_state = `GET_NEXT_ADDR;
+
+				packet_out_en = 0;
 			end
 			`GET_NEXT_ADDR: begin
 				free_en = 1'b0;
 				free_addr = voq_meta_out;
 				free_addr_reg = next_free_addr;
-				curr_d_read = voq_meta_out + send_cycle_counter;
+				curr_d_read = data_read_addr + {9'b0, send_cycle_counter};
 				next_send_cycle_counter = 2;
 				next_out_state = `SEND_PACKET;
+
+				packet_out_en  = 1;
 			end
 			`SEND_PACKET: begin
+				packet_out_en  = 1;
+
 				free_en = 1'b0;
 				free_addr = voq_meta_out;
-				curr_d_read = voq_meta_out + send_cycle_counter;
+				curr_d_read = data_read_addr + {9'b0, send_cycle_counter};
 				next_send_cycle_counter = (send_cycle_counter == 7) ? 0 : (send_cycle_counter + 1);
 				if (send_cycle_counter == 7 && next_free_addr_reg != 10'b0) begin
 					next_out_state = `SEND_META_2_CMU;
@@ -290,11 +273,12 @@ module ingress (
 				d_mac <= next_d_mac;
 				remaining_packet_length <= next_remaining_packet_length;
 			end
-			if (sched_done) begin
-				out_state <= next_out_state;
-				voq_meta_out <= voq_meta_out_reg;
-				send_cycle_counter <= next_send_cycle_counter;
-			end
+
+			out_state <= next_out_state;
+			send_cycle_counter <= next_send_cycle_counter;
+
+	 		voq_meta_out <= voq_meta_out_reg;
+			
 
 		end
 	end

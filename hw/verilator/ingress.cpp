@@ -51,6 +51,8 @@ int main(int argc, const char ** argv, const char ** env) {
   dut->packet_en = 0;
   dut->packet_in = 0;
   dut->reset = 1;
+  dut->sched_sel = 1;
+  dut->sched_done = 0;
 
   // std::cout << dut->n; // Print the starting value of the sequence
 
@@ -64,17 +66,24 @@ int main(int argc, const char ** argv, const char ** env) {
     dut->clk = ((time % 20) >= 10) ? 0 : 1; // Simulate a 50 MHz clock;
 	if (time < 160) {
 		dut->reset = 1;
+		dut->sched_done = 0;
 	} else if (time < 640 and time % 20 == 0) {
 		dut->reset= 0;
-		
+		dut->sched_done = 0;
 		dut->packet_en = 1;
 		dut->packet_in = packet_in[iter];
 		iter++;
-	} else {
-		dut->packet_en = 0;
+	} else if ((time % 160) == 0) {
+		dut->packet_en = 1;
+		dut->packet_in = packet_in[iter];
+		iter++;
+	
+		dut->sched_done = 1; 	
+	} else if ((time % 160) == 20) {
+		dut->sched_done = 0;
 	}
 
-	iter = (iter == 4) ? 0 : iter;
+	iter = (iter == 24) ? 0 : iter;
     dut->eval();     // Run the simulation for a cycle
     tfp->dump(time); // Write the VCD file for this cycle
   }
