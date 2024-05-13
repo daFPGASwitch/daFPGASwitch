@@ -46,7 +46,7 @@ int main(int argc, const char ** argv, const char ** env) {
   Verilated::traceEverOn(true);
   VerilatedVcdC * tfp = new VerilatedVcdC;
   dut->trace(tfp, 99); // Verilator should trace signals up to 99 levels deep
-  tfp->open("cmu.vcd");
+  tfp->open("ingress.vcd");
 
   dut->packet_en = 0;
   dut->packet_in = 0;
@@ -64,7 +64,7 @@ int main(int argc, const char ** argv, const char ** env) {
     dut->clk = ((time % 20) >= 10) ? 0 : 1; // Simulate a 50 MHz clock;
 	if (time < 160) {
 		dut->reset = 1;
-	} else if (time < 640) {
+	} else if (time < 640 and time % 20 == 0) {
 		dut->reset= 0;
 		
 		dut->packet_en = 1;
