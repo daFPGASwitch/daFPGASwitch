@@ -61,7 +61,7 @@ module vmu #(
         end
         
         if (voq_dequeue_en && !is_empty[voq_dequeue_sel]) begin
-            start_idx[voq_dequeue_sel] <=  (start_idx[voq_dequeue_sel] != 0) ? start_idx[voq_dequeue_sel] - 1 : PACKET_CNT - 1;
+            start_idx[voq_dequeue_sel] <=  (start_idx[voq_dequeue_sel] != PACKET_CNT - 1) ? start_idx[voq_dequeue_sel] + 1 : 0;
         end
     end
 

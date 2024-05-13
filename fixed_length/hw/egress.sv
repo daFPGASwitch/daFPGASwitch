@@ -27,7 +27,7 @@ module egress #(
         end
         
         if (egress_in_ack) begin
-            start_idx <=  (start_idx != 0) ? start_idx - 1 :1023;
+            start_idx <= (start_idx != 1023) ? start_idx + 1 :0;
         end
     end
 

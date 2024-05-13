@@ -43,46 +43,46 @@ int main(int argc, const char ** argv, const char ** env) {
       dut -> chipselect = 0;
     }
 
-  if (time == 540) {
+  if (time == 1540) {
       dut->chipselect = 1;
       dut->address = 2;
       dut -> write = 1;
       dut -> read  = 0;
       dut->writedata  = 0b01010000100000000000000000000000;
     }
-    if (time == 560) {
+    if (time == 1560) {
       dut -> chipselect = 0;
     }
 
 
-    if(time == 1000) {
+    if(time == 3000) {
       dut -> write = 1;
       dut -> chipselect = 1;
       dut -> read = 0;
       dut -> address = 0;
       dut->writedata = 2;
     }
-    if(time == 1020) {
+    if(time == 3020) {
       dut -> chipselect = 0;
     }
   
-    if(time == 2000) {
+    if(time == 5000) {
       dut -> write = 0;
       dut -> chipselect = 1;
       dut -> read = 1;
       dut -> address = 2;
     }
-    if(time == 2020) {
+    if(time == 5020) {
       dut -> chipselect = 0;
     }
 
-    if(time == 3000) {
+    if(time == 7000) {
       dut -> write = 0;
       dut -> chipselect = 1;
       dut -> read = 1;
       dut -> address = 2;
     }
-    if(time == 3020) {
+    if(time == 7020) {
       dut -> chipselect = 0;
     }
 
