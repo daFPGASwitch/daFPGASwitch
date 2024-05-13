@@ -141,7 +141,8 @@ int main()
 	print_packet(&pkt_ctrl);
 
 	printf("Requested %d packets\n", num_sent);
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < 100; i++) {
+        usleep(100);
     	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
