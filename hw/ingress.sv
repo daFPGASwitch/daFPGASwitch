@@ -37,80 +37,143 @@ module ingress (
 	logic [2:0] input_counter;
 	logic [2:0] output_counter;
 	
-	logic [5:0] remaining_packet_length;
-	logic 		alloc_en;
-	logic [47:0] d_mac, next_d_mac;
-
-	logic [5:0] remaining_length;
-	logic [5:0] next_remaining_length;
-
-	/* Input for dmem */
-	logic [12:0] curr_d_write, curr_d_read;
-
+	logic [5:0]  next_remaining_packet_length, remaining_packet_length;
 	logic [31:0] temp_packet_in;
+	logic 		 alloc_en;
+	logic [47:0] d_mac, next_d_mac;
+	logic [31:0] packet_start_time_logic;
+	logic [3:0]  in_state, next_in_state;
+	logic [12:0] curr_d_write, curr_d_read;
+	logic        voq_enqueue_en;
+	logic [1:0]  voq_enqueue_sel, port_number;
+	logic        first_packet;
+	
+
+
+
 
 	/* States */
-	logic [3:0] in_state, next_in_state;
+
 	logic [3:0] out_state, next_out_state;
 
 	/* time */
 	logic [31:0] curr_time;
 
 
+	logic free_en;
+	logic [12:0] free_addr, next_free_addr;
+	logic is_empty, is_full;
+	logic [31:0] meta_out;
+	logic        voq_dequeue_en;
+	logic [1:0]  voq_dequeue_sel;
+
+
 	always_comb begin
 		case (in_state)
 			`IN_IDLE: begin
-				
+				next_remaining_packet_length = packet_in[26:21];
+				next_d_mac[47:32] 			 = packet_in[15:0];
+				next_d_mac[31:0] 			 = 0;
+				temp_packet_in 			     = packet_in;
+				alloc_en 					 = 1;
+				packet_start_time_logic      = curr_time;
+				next_in_state 				 = `IN_0;
+				curr_d_write				 = (first_packet == 0) ? 1 : alloc_addr;
+				voq_enqueue_en               = 0;
+				voq_enqueue_sel              = port_number;
 			end
 			`IN_0: begin
-				next_remaining_packet_length = packet_in[26:21];
-				next_d_mac[47:32] = packet_in[15:0];
-				next_d_mac[31:0] = 0;
-				temp_packet_in = packet_in;
-				alloc_en = 1;
+				next_remaining_packet_length = remaining_packet_length;
+				next_d_mac[47:32] 			 = d_mac[47:32];
+				next_d_mac[31:0] 			 = packet_in;
+				temp_packet_in 				 = packet_in;
+				alloc_en 					 = 0;
+				next_in_state 				 = `IN_1;
+				curr_d_write				 = alloc_addr+1;
+				voq_enqueue_en               = 0;
+				voq_enqueue_sel              = port_number;
 			end
 			`IN_1: begin
 				next_remaining_packet_length = remaining_packet_length;
-				next_d_mac[31:0] = packet_in;
-				next_d_mac[47:32] = d_mac[31:0];
-				temp_packet_in = packet_in;
-				alloc_en = 0;
+				next_d_mac                   = d_mac;
+				temp_packet_in 				 = curr_time;
+				alloc_en 					 = 0;
+				next_in_state				 = `IN_2;
+				curr_d_write				 = alloc_addr+2;
+				voq_enqueue_en               = 1;
+				voq_enqueue_sel              = port_number;
+				
 			end
 			`IN_2: begin
-				next_d_mac = d_mac;
-				temp_packet_in = curr_time;
 				next_remaining_packet_length = remaining_packet_length;
+				next_d_mac                   = d_mac;
+				temp_packet_in				 = packet_in;
+				alloc_en 					 = 0;
+				next_in_state				 = `IN_3;
+				curr_d_write				 = alloc_addr+3;
+				voq_enqueue_en               = 0;
+				voq_enqueue_sel              = port_number;
 			end
 			`IN_3: begin
-				next_d_mac = d_mac;
-				temp_packet_in = packet_in;
 				next_remaining_packet_length = remaining_packet_length;
+				next_d_mac 					 = d_mac;
+				temp_packet_in 				 = packet_in;
+				alloc_en 					 = 0;
+				next_in_state				 = `IN_4;
+				curr_d_write				 = alloc_addr+4;
+				voq_enqueue_en               = 0;
+				voq_enqueue_sel              = port_number;
 			end
 			`IN_4: begin
-				next_d_mac = d_mac;
-				temp_packet_in = packet_in;
 				next_remaining_packet_length = remaining_packet_length;
+				next_d_mac 					 = d_mac;
+				temp_packet_in 				 = packet_in;
+				alloc_en 					 = 0;
+				next_in_state				 = `IN_5;
+				curr_d_write				 = alloc_addr+5;
+				voq_enqueue_en               = 0;
+				voq_enqueue_sel              = port_number;
 			end
 			`IN_5: begin
-				next_d_mac = d_mac;
-				temp_packet_in = packet_in;
 				next_remaining_packet_length = remaining_packet_length;
+				next_d_mac 					 = d_mac;
+				temp_packet_in 				 = packet_in;
+				alloc_en 					 = 0;
+				next_in_state				 = `IN_6;
+				curr_d_write				 = alloc_addr+6;
+				voq_enqueue_en               = 0;
+				voq_enqueue_sel              = port_number;
 			end
 			`IN_6: begin
-				next_d_mac = d_mac;
-				temp_packet_in = packet_in;
-				next_remaining_packet_length = remaining_packet_length;
-			end
-			`IN_7: begin
-				if (alloc_addr > 0) begin
-					next_d_mac = d_mac;
-					temp_packet_in = packet_in;
-					next_remaining_packet_length = remaining_packet_length -;
-				end else begin
+				voq_enqueue_en               = 0;
+				voq_enqueue_sel              = port_number;
+				if(remaining_packet_length > 0) begin	
+					next_remaining_packet_length = remaining_packet_length - 1;
+					next_in_state                   = `IN_6;
+					next_d_mac 					 = d_mac;
+					temp_packet_in 				 = packet_in;
+
+				end else begin 
+					next_remaining_packet_length = 0;
+					next_in_state 					 = `IN_IDLE;
+					next_d_mac 					 = 48'b0;
+					temp_packet_in 				 = 32'b0;
 
 				end
+				if((curr_time - packet_start_time_logic) % 8 == 0) begin
+					alloc_en = 1;
+					curr_d_write				 = alloc_addr;
+				end else begin
+					alloc_en = 0;
+					curr_d_write				 = alloc_addr + ((curr_time - packet_start_time_logic) % 8);
+				end
+				
+
 			end
+			default: begin end
+			
 		endcase
+/*
 		case (out_state)
 			`OUT_0: begin
 			end
@@ -129,32 +192,35 @@ module ingress (
 			`OUT_7: begin
 			end
 		endcase
+*/
 	end
 
 
 
 	always_ff @(posedge clk) begin
 		if (reset) begin
-			state <= `IDLE;
+			in_state <= `IN_IDLE;
 			curr_time <= 0;
+			remaining_packet_length <= 0;
+			first_packet            <= 0;
 		end // if reset
 		else begin
 			/* Time driver*/
-			if (clk % 8) begin
-				curr_time <= curr_time + 1;
-				remaining_packet_length <= remaining_packet_length - 1;
-			end else begin
-				remaining_packet_length <= next_remaining_packet_length;
-			end
+			curr_time <= curr_time + 1;
+
 			/* Input */
-			if (new_packet_en) begin
+			if (packet_en) begin
+				first_packet <= 1;
 				in_state <= next_in_state;
 				d_mac <= next_d_mac;
+				remaining_packet_length <= next_remaining_packet_length;
 			end
-			/* Output */
+/*
+			//Output 
 			if (sched_en) begin
 				out_state <= next_out_state;
 			end
+*/
 		end
 	end
 
@@ -163,13 +229,13 @@ module ingress (
 	(
 		// Input
 		.clk(clk), 
-		.voq_enqueue_en(), .voq_enqueue_sel(),
-		.voq_dequeue_en(), .voq_dequeue_sel(),
+		.voq_enqueue_en(voq_enqueue_en), .voq_enqueue_sel(voq_enqueue_sel),
+		.voq_dequeue_en(voq_dequeue_en), .voq_dequeue_sel(voq_dequeue_sel),
 		.meta_in(alloc_addr),
 
 		// Output
-		.meta_out(),
-		.is_empty(), .is_full()
+		.meta_out(meta_out),
+		.is_empty(is_empty), .is_full(is_full)
 	);
 
 	cmu ctrl_mu
@@ -179,17 +245,17 @@ module ingress (
 
 		// From input
     	.remaining_packet_length(remaining_packet_length), // in blocks
-		.alloc_en(ctrl_wen), // writing data in
+		.alloc_en(alloc_en), // writing data in
 
 		// From output
-		.free_addr(),
-		.free_en(),
+		.free_addr(free_addr),
+		.free_en(free_en),
 
     	// To input
 		.alloc_addr(alloc_addr),
 
 		// To output
-		.next_free_addr() // retrieve the "next" of the free_addr
+		.next_free_addr(next_free_addr) // retrieve the "next" of the free_addr
 	);
 
 	simple_dual_port_mem #(.MEM_SIZE(1024*8), .DATA_WIDTH(32)) dmem
@@ -197,8 +263,10 @@ module ingress (
 		.clk(clk), 
 		.ra(curr_d_read), .wa(curr_d_write),
 		.d(temp_packet_in),	.q(packet_out),
-		.write(write_en)
+		.write(packet_en)
 	);
+
+	mac_to_port mac_to_port_2(.DMAC(dmac), .port_number(port_number));
 
 
 endmodule
