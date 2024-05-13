@@ -150,8 +150,8 @@ int main()
 	set_ctrl_register(&pkt_ctrl);
 	print_packet_no_hw(&pkt_ctrl);
 
-	set_all_packet_fields(&pkt_meta, 0, 3, 1);
-    for (int i = 0; i < write_num_packets; i++) {
+    for (int i = 0; i < 10; i++) {
+        set_all_packet_fields(&pkt_meta, i%2, i%4, 4);
 		send_packet(&pkt_meta);
 		print_packet_no_hw(&pkt_meta);
 	}
@@ -160,7 +160,8 @@ int main()
 	len = 2;
 
 	set_all_packet_fields(&pkt_meta, 0, 4, 4);
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 10; i++)
+        set_all_packet_fields(&pkt_meta, i%4, i%4 + 1, 4);
         send_packet(&pkt_meta);
 		print_packet_no_hw(&pkt_meta);
 	num_sent += write_num_packets;
@@ -173,8 +174,30 @@ int main()
 
 	printf("Requested %d packets\n", num_sent);
 	for (int i = 0; i < 100; i++) {
-        sleep(1);
+        sleep(0.5);
+        printf("Port 0\n");
     	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
+			perror("ioctl read packet failed");
+			close(simple_switch_fd);
+			return -1;
+		}
+        printf("Port 1\n");
+		print_packet_no_hw(&rcvd_pkt_meta);
+            	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_1, &rcvd_pkt_meta) < 0) {
+			perror("ioctl read packet failed");
+			close(simple_switch_fd);
+			return -1;
+		}
+        printf("Port 2\n");
+		print_packet_no_hw(&rcvd_pkt_meta);
+            	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_2, &rcvd_pkt_meta) < 0) {
+			perror("ioctl read packet failed");
+			close(simple_switch_fd);
+			return -1;
+		}
+        printf("Port 3\n");
+		print_packet_no_hw(&rcvd_pkt_meta);
+            	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_3, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
 			return -1;
