@@ -23,7 +23,7 @@ The 2 higher bits represents which voq it is.
 
 */
 
-
+/* verilator lint_off UNUSED */
 module vmu #(
     parameter PACKET_CNT = 1024,  /* How many packets can there be in each VOQ, 1024 by default */
     parameter EGRESS_CNT = 4 /* How many egress there are; which is also how many voqs there are. */
@@ -35,6 +35,7 @@ module vmu #(
     input logic voq_dequeue_en,
     input logic [$clog2(EGRESS_CNT)-1:0] voq_dequeue_sel,
     input logic [31:0] meta_in, // The address to find the first address of the packet
+    input logic [10:0] time_stamp,
 
     /* TODO: How many bits for meta_out? */
     output logic [31:0] meta_out, // The content (first addr of the packet) saved for the dequeue packet
@@ -81,7 +82,7 @@ module vmu #(
 	(	
 		.clk(clk), 
 		.ra(start_idx[voq_dequeue_sel]), .wa(end_idx[voq_enqueue_sel]),
-		.d(meta_in),	.q(meta_out),
+		.d({meta_in[31:22], time_stamp, meta_in[10:0]}),	.q(meta_out),
 		.write(voq_enqueue_en)
 	);
 

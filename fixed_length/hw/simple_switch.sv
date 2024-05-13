@@ -25,11 +25,13 @@ module simple_switch
     logic [3:0] packet_out_en;
     logic experimenting;
     logic [15:0] empty;
-    logic [31:0] counter;
+    logic [10:0] counter;
     logic [3:0] cycle;
     logic sched_en;
     logic simple_reset;
     logic global_reset;
+    logic sched_policy;
+    logic [7:0] sched_prio;
 
     assign global_reset = simple_reset || reset;
 
@@ -37,10 +39,13 @@ module simple_switch
         cycle <= (cycle == 15) ? 0 : cycle + 1;
         if (experimenting) begin
             if (cycle == 0) begin
+                counter <= counter + 1;
                 sched_en <= 1;
             end else if (cycle == 1) begin
                 sched_en <= 0;
             end
+        end else begin
+           counter <= 0;
         end
     end
     
@@ -51,6 +56,7 @@ module simple_switch
         .ingress_in(meta_in),
         .sched_en(sched_sel_en[0] && experimenting),
         .sched_sel(sched_sel[1:0]),
+        .time_stamp(counter),
     
         // Output
         // .ingress_out_en(packet_en[0]),
@@ -65,6 +71,7 @@ module simple_switch
         .ingress_in(meta_in),
         .sched_en(sched_sel_en[1] && experimenting),
         .sched_sel(sched_sel[3:2]),
+        .time_stamp(counter),
     
         // Output
         // .ingress_out_en(packet_en[1]),
@@ -80,6 +87,7 @@ module simple_switch
         .ingress_in(meta_in),
         .sched_en(sched_sel_en[2] && experimenting),
         .sched_sel(sched_sel[5:4]),
+        .time_stamp(counter),
 
     
         // Output
@@ -95,6 +103,7 @@ module simple_switch
         .ingress_in(meta_in),
         .sched_en(sched_sel_en[3] && experimenting),
         .sched_sel(sched_sel[7:6]),
+        .time_stamp(counter),
     
         // Output
         // .ingress_out_en(packet_en[3]),
@@ -168,7 +177,10 @@ module simple_switch
 
         // Output: Ongoing experiment.
         .experimenting(experimenting),
-        .simple_reset(simple_reset)
+        .simple_reset(simple_reset),
+
+        .sched_policy(sched_policy),
+        .sched_prio(sched_prio)
 
     );
 
@@ -187,6 +199,9 @@ module simple_switch
         .is_busy(0),
         .busy_voq_num(0),
         .voq_empty(empty),
+        .policy(sched_policy),
+        .prio(sched_prio),
+
         .sched_sel_en(sched_sel_en), // passed by to ingress, to know which ingress should dequeue
         .sched_sel(sched_sel) // passed by to ingress, to know which voq to dequeue
     );

@@ -1,11 +1,11 @@
 module sched (
     input logic clk,
-    // input logic policy, // We have doubly RR, or priority based, can be controlled by software
-    // input logic [7:0] priority,
     input logic sched_en,
     input logic [3:0] is_busy,
     input logic [7:0] busy_voq_num,
     input logic [15:0] voq_empty,
+    input logic policy, // We have doubly RR, or priority based, can be controlled by software
+    input logic [7:0] prio,
     output logic [3:0] sched_sel_en, // passed by to ingress, to know which ingress should dequeue
     output logic [7:0] sched_sel // passed by to ingress, to know which voq to dequeue
 );
@@ -122,6 +122,8 @@ module sched (
     .voq_empty(voq_empty[curr_in_4 +: 4]),
     .voq_picked(voq_picked),
     .no_available_voq(no_available_voq),
-    .voq_to_pick(voq_to_pick)
+    .voq_to_pick(voq_to_pick),
+    .policy(policy),
+    .prio(prio)
   );
 endmodule

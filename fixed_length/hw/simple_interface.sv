@@ -1,3 +1,4 @@
+/* verilator lint_off UNUSED */
 module simple_interface(
     input logic clk,
 
@@ -30,7 +31,10 @@ module simple_interface(
     // Special case: Because we're polling but not handling interrupt
     // we need to acknowledge that this metadata is consumed by the software.
     // This is the only ack in our program. 
-    output logic [3:0] interface_out_ack
+    output logic [3:0] interface_out_ack,
+
+    output logic sched_policy,
+    output logic [7:0] sched_prio
 );
 
   logic [31:0] ctrl;
@@ -40,6 +44,8 @@ module simple_interface(
     experimenting = (ctrl[1:0] == 2);
     // send_only = (ctrl == 1);
     simple_reset = (ctrl[1:0] == 0) || reset;
+    sched_policy = ctrl[2];
+    sched_prio = ctrl[10:3];
   end
 
   always_ff @(posedge clk) begin
