@@ -89,7 +89,7 @@ void set_ctrl_register(const packet_ctrl_t *pkt_ctrl)
 
 void send_packet(const packet_meta_t *pkt_meta)
 {
-    sleep(0.5);
+    sleep(1);
     if (ioctl(simple_switch_fd, SIMPLE_WRITE_PACKET, pkt_meta) < 0) {
         perror("Failed to send packet");
         return;
@@ -176,7 +176,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
-        sleep(0.5);
+        sleep(1);
         printf("Port 0\n");
 		print_packet_no_hw(&rcvd_pkt_meta);
             	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_1, &rcvd_pkt_meta) < 0) {
@@ -184,7 +184,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
-        sleep(0.5);
+        sleep(1);
         printf("Port 1\n");
 		print_packet_no_hw(&rcvd_pkt_meta);
             	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_2, &rcvd_pkt_meta) < 0) {
@@ -192,7 +192,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
-        sleep(0.5);
+        sleep(1);
         printf("Port 2\n");
 		print_packet_no_hw(&rcvd_pkt_meta);
             	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_3, &rcvd_pkt_meta) < 0) {
@@ -200,7 +200,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
-		sleep(0.5);
+		sleep(1);
         printf("Port 3\n");
 		print_packet_no_hw(&rcvd_pkt_meta);
 	}
