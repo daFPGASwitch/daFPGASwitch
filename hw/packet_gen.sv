@@ -53,12 +53,12 @@ module packet_gen #(
   logic [$clog2(PACKET_CNT)-1:0] start_idx;  // The first element
   logic [$clog2(PACKET_CNT)-1:0] end_idx;  // One pass the last element
 
-  logic [5:0] remaining_length;
-  logic [5:0] next_remaining_length;
+  logic [15:0] remaining_length;
+  logic [15:0] next_remaining_length;
   logic [47:0] DMAC, SMAC;  // A lot of registers, be really careful!
-  logic [15:0] length_in_bits;
+  logic [15:0] length_in_bytes;
   logic [3:0] state, next_state;
-  assign length_in_bits = meta_out[27:22] * 32;
+  assign length_in_bytes = meta_out[27:22] * 32;
   // SMAC_FST, SMAC_SND Are not used
 
 
@@ -72,51 +72,51 @@ module packet_gen #(
       end  //START
       `LENGTH_DMAC_FST: begin
         next_state   = `LENGTH_DMAC_SND;
-        packet_gen_out       = {length_in_bits, DMAC[47:32]};
-        packet_gen_out_en = 1;
-        next_remaining_length = remaining_length;
+        packet_gen_out       = {length_in_bytes, DMAC[47:32]};
+        packet_gen_out_en 	= 1;
+		next_remaining_length	= length_in_bytes - 4; 
       end  // LENGTH_DMAC_FST
       `LENGTH_DMAC_SND: begin
-        next_remaining_length = meta_out[27:22];
         next_state            = `TIME_FST;
         packet_gen_out                = DMAC[31:0];
         packet_gen_out_en          = 1;
-        next_remaining_length = remaining_length;
+        next_remaining_length = remaining_length - 4;
       end  // LENGTH_DMAC_SND
       `TIME_FST: begin
         next_state   = `TIME_SND;
         packet_gen_out       = {10'b0, meta_out[21:0]};
         packet_gen_out_en = 1;
-        next_remaining_length = remaining_length;
+        next_remaining_length = remaining_length - 4;
       end  // TIME_FST	
       `TIME_SND: begin
         next_state   = `SMAC_FST;
         packet_gen_out       = 32'b0;
         packet_gen_out_en = 1;
-        next_remaining_length = remaining_length;
+        next_remaining_length = remaining_length - 4;
       end  // TIME_SND
       `SMAC_FST: begin
         next_state   = `SMAC_SND;
         packet_gen_out       = {16'b0, SMAC[47:32]};
         packet_gen_out_en = 1;
-        next_remaining_length = remaining_length;
+        next_remaining_length = remaining_length - 4;
       end  //SMAC_FST
       `SMAC_SND: begin
         next_state   = `PAYLOAD;
         packet_gen_out       = SMAC[31:0];
         packet_gen_out_en = 1;
-        next_remaining_length = remaining_length;
+        next_remaining_length = remaining_length - 4;
       end  //SMAC_SND
       `PAYLOAD: begin
-          if (remaining_length > 0) begin
-              next_remaining_length = remaining_length - 1;
-              next_state = `PAYLOAD;
+          if (remaining_length > 4) begin
+			  next_state = `PAYLOAD;
           end else begin
-              next_remaining_length = 0;
-              next_state = `IDLE;
+              next_state = `LENGTH_DMAC_FST;
           end
+		  
+		  next_remaining_length = remaining_length - 4;
           packet_gen_out = ~32'b0;
           packet_gen_out_en = 1;
+
       end
       default: begin
         packet_gen_out_en = 0;
