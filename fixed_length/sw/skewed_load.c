@@ -122,14 +122,14 @@ int main()
 	set_ctrl_register(&pkt_ctrl);
 	print_packet(&pkt_ctrl);
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 12; i++) {
         set_all_packet_fields(&pkt_meta, (i+1)%2, i%4, 1);
 		send_packet(&pkt_meta);
 		print_packet(&pkt_meta);
 	}
 	num_sent += 10;
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 12; i++)
         set_all_packet_fields(&pkt_meta, (i+3)%4, (i+1)%4, 1);
         send_packet(&pkt_meta);
 		print_packet(&pkt_meta);
@@ -141,7 +141,7 @@ int main()
 	print_packet(&pkt_ctrl);
 
 	printf("Requested %d packets\n", num_sent);
-	for (int i = 0; i < 15; i++) {
+	for (int i = 0; i < 44; i++) {
     	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
