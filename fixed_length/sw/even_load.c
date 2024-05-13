@@ -147,7 +147,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
-        if (rcvd_pkt_meta) {
+        if (rcvd_pkt_meta >> 22) {
             printf("Port 0: \n");
             print_packet(&rcvd_pkt_meta);
             total_latency += extra_time_delta(rcvd_pkt_meta);
@@ -158,7 +158,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
-        if (rcvd_pkt_meta) {
+        if (rcvd_pkt_meta >> 22) {
             printf("Port 1: \n");
             print_packet(&rcvd_pkt_meta);
             total_latency += extra_time_delta(rcvd_pkt_meta);
@@ -169,7 +169,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
-        if (rcvd_pkt_meta) {
+        if (rcvd_pkt_meta >> 22) {
             printf("Port 2: \n");
             print_packet(&rcvd_pkt_meta);
             total_latency += extra_time_delta(rcvd_pkt_meta);
@@ -180,7 +180,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
-        if (rcvd_pkt_meta) {
+        if (rcvd_pkt_meta >> 22) {
             printf("Port 3: \n");
             print_packet(&rcvd_pkt_meta);
             total_latency += extra_time_delta(rcvd_pkt_meta);
