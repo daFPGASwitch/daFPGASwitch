@@ -10,6 +10,8 @@ PWD := $(shell pwd)/driver
 
 default: clean module simpleSwitch even_load skewed_load even_load_prio skewed_load_prio
 
+test: clean_test simpleSwitch even_load skewed_load even_load_prio skewed_load_prio
+
 module:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} modules
 
@@ -44,7 +46,17 @@ skewed_load_prio.o:
 skewed_load_prio: skewed_load_prio.o
 	cc -o skewed_load_prio skewed_load_prio.o
 
+clean_test:
+	${RM} skewed_load_prio skewed_load_prio.o
+	${RM} even_load_prio even_load_prio.o
+	${RM} skewed_load skewed_load.o
+	${RM} even_load even_load.o
+	${RM} simpleSwitch simpleSwitch.o
+
 clean:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} clean
-	${RM} simpleSwitch simpleSwitch.o
+	${RM} skewed_load_prio skewed_load_prio.o
+	${RM} even_load_prio even_load_prio.o
+	${RM} skewed_load skewed_load.o
+	${RM} even_load even_load.o
 endif
