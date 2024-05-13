@@ -113,13 +113,11 @@ void send_packet(const packet_meta_t *pkt_meta)
 void set_packet_length(packet_meta_t *pkt_meta, unsigned int length)
 {
 	if (length > 0x3F) {
-		// perror("Failed to set length or time_delta\n");
+		perror("Failed to set length\n");
 		return;
 	}
     // Mask and shift length @ bit pos [27:22]
     *pkt_meta |= (length & 0x3F) << 22;
-    // Mask and set time_delta @ bit pos [21:0]
-    // *pkt_meta |= (timestamp & 0x3FFFFF);
 }
 
 
@@ -166,7 +164,6 @@ int main()
 		print_packet_no_hw(&pkt_meta);
 	num_sent += write_num_packets;
 
-    // Change control register to reading/writing (CTRL=2)
 	printf("Set CTRL register to 2\n");
 	pkt_ctrl = 2;
 	set_ctrl_register(&pkt_ctrl);
