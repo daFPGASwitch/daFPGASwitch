@@ -65,6 +65,7 @@ obj_dir/Vpacket_gen : $(PACKET_GEN_FILES) verilator/packet_gen.cpp
 	cd obj_dir && make -j -f Vpacket_gen.mk
 
 obj_dir/Vcmu : $(CMU_FILES) verilator/cmu.cpp
+
 	verilator -trace -Wall -cc $(CMU_FILES) -exe verilator/cmu.cpp \
 		-top-module cmu
 	cd obj_dir && make -j -f Vcmu.mk
@@ -75,7 +76,7 @@ obj_dir/Vpick_voq : pick_voq.sv verilator/pick_voq.cpp
 	cd obj_dir && make -j -f Vpick_voq.mk
 
 obj_dir/Vingress : $(INGRESS_FILES) verilator/ingress.cpp
-	verilator -Wall -cc $(INGRESS_FILES) -exe verilator/ingress.cpp \
+	verilator -trace -Wall -cc $(INGRESS_FILES) -exe verilator/ingress.cpp \
 		-top-module ingress
 	cd obj_dir && make -j -f Vingress.mk
 

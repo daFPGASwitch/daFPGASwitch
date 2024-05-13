@@ -21,53 +21,74 @@
 
 module ingress (
 	input logic 		clk,
-
+	
+	input logic			reset,
+	
 	input logic	[31:0]	packet_in, // From packet gen, getting packet
 	input logic 		packet_en, // From packet gen, meaning that we should start recving a packet segment
-	input logic 		new_packet_en, // From packet gen, meaning that we should start recving a new packet
+	//input logic 		new_packet_en, // From packet gen, meaning that we should start recving a new packet
 
-	input logic [1:0]	sched_sel, // From scheduler, the voq to dequeue the packet
-	input logic			sched_done, // From scheduler, meaning that we should start sending a packet segment
+	//input logic [1:0]	sched_sel, // From scheduler, the voq to dequeue the packet
+	//input logic			sched_done, // From scheduler, meaning that we should start sending a packet segment
 	
-	output logic		sched_en, // To sch
-	output logic[31:0]	packet_out, // To crossbar
-	output logic		packet_out_en // To crossbar
+	//output logic		sched_en,   // To sch
+	output logic[31:0]	packet_out  // To crossbar
+	//output logic		packet_out_en // To crossbar
 );
 
-	logic [2:0] input_counter;
-	logic [2:0] output_counter;
+	//logic [2:0] input_counter;
+	//logic [2:0] output_counter;
 	
 	logic [5:0]  next_remaining_packet_length, remaining_packet_length;
 	logic [31:0] temp_packet_in;
+	/* verilator lint_off UNOPTFLAT */
 	logic 		 alloc_en;
 	logic [47:0] d_mac, next_d_mac;
 	logic [31:0] packet_start_time_logic;
+	/* verilator lint_on UNOPTFLAT */
 	logic [3:0]  in_state, next_in_state;
+	/* verilator lint_off UNDRIVEN */
 	logic [12:0] curr_d_write, curr_d_read;
+	/* verilator lint_on UNDRIVEN */
 	logic        voq_enqueue_en;
 	logic [1:0]  voq_enqueue_sel, port_number;
 	logic        first_packet;
 	
 
 
-
+	logic[9:0]	alloc_addr;
 
 	/* States */
 
-	logic [3:0] out_state, next_out_state;
+	//logic [3:0] out_state, next_out_state;
 
 	/* time */
 	logic [31:0] curr_time;
 
-
+	logic [12:0] start_addr;
+	/* verilator lint_off UNUSED */
+	assign	start_addr = {3'b0, alloc_addr};
+	logic [31:0] offset_addr;
+	assign  offset_addr = ((curr_time - packet_start_time_logic) % 8);
+	
 	logic free_en;
-	logic [12:0] free_addr, next_free_addr;
-	logic is_empty, is_full;
-	logic [31:0] meta_out;
+	
+	logic [9:0]  free_addr,  next_read_addr;
+	logic [3:0]  is_empty, is_full;
+	logic [9:0]  meta_out;
 	logic        voq_dequeue_en;
 	logic [1:0]  voq_dequeue_sel;
+	/* verilator lint_on UNUSED */
 
-
+	assign is_empty = 4'b0;
+	assign is_full = (meta_out == 10'b0) ? 4'b0: 4'b1;
+	assign free_addr = 10'b0;
+	assign free_en	= 0;
+	assign voq_dequeue_en = 0;
+	assign voq_dequeue_sel = 1;
+	
+	assign free_addr = 10'b0;
+	
 	always_comb begin
 		case (in_state)
 			`IN_IDLE: begin
@@ -78,7 +99,7 @@ module ingress (
 				alloc_en 					 = 1;
 				packet_start_time_logic      = curr_time;
 				next_in_state 				 = `IN_0;
-				curr_d_write				 = (first_packet == 1) ? 1 : alloc_addr;
+				curr_d_write				 = (first_packet == 1) ? 13'b1 : start_addr;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -89,7 +110,7 @@ module ingress (
 				temp_packet_in 				 = packet_in;
 				alloc_en 					 = 0;
 				next_in_state 				 = `IN_1;
-				curr_d_write				 = alloc_addr+1;
+				curr_d_write				 = start_addr+1;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -99,7 +120,7 @@ module ingress (
 				temp_packet_in 				 = curr_time;
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_2;
-				curr_d_write				 = alloc_addr+2;
+				curr_d_write				 = start_addr+2;
 				voq_enqueue_en               = 1;
 				voq_enqueue_sel              = port_number;
 				
@@ -110,7 +131,7 @@ module ingress (
 				temp_packet_in				 = packet_in;
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_3;
-				curr_d_write				 = alloc_addr+3;
+				curr_d_write				 = start_addr+3;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -120,7 +141,7 @@ module ingress (
 				temp_packet_in 				 = packet_in;
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_4;
-				curr_d_write				 = alloc_addr+4;
+				curr_d_write				 = start_addr+4;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -130,7 +151,7 @@ module ingress (
 				temp_packet_in 				 = packet_in;
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_5;
-				curr_d_write				 = alloc_addr+5;
+				curr_d_write				 = start_addr+5;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -140,7 +161,7 @@ module ingress (
 				temp_packet_in 				 = packet_in;
 				alloc_en 					 = 0;
 				next_in_state				 = `IN_6;
-				curr_d_write				 = alloc_addr+6;
+				curr_d_write				 = start_addr+6;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -159,10 +180,10 @@ module ingress (
 
 				if((curr_time - packet_start_time_logic) % 8 == 0) begin
 					alloc_en 					 = 1;
-					curr_d_write				 = alloc_addr;
+					curr_d_write				 = start_addr;
 				end else begin
 					alloc_en = 0;
-					curr_d_write				 = alloc_addr + ((curr_time - packet_start_time_logic) % 8);
+					curr_d_write				 = start_addr + offset_addr[12:0];
 				end
 				
 
@@ -170,6 +191,7 @@ module ingress (
 			default: begin end
 			
 		endcase
+
 /*
 		case (out_state)
 			`OUT_0: begin
@@ -253,7 +275,7 @@ module ingress (
 		.alloc_addr(alloc_addr),
 
 		// To output
-		.next_free_addr(next_free_addr) // retrieve the "next" of the free_addr
+		.next_free_addr(next_read_addr) // retrieve the "next" of the free_addr
 	);
 
 	simple_dual_port_mem #(.MEM_SIZE(1024*8), .DATA_WIDTH(32)) dmem
@@ -264,7 +286,7 @@ module ingress (
 		.write(packet_en)
 	);
 
-	mac_to_port mac_to_port_2(.DMAC(dmac), .port_number(port_number));
+	mac_to_port mac_to_port_2(.MAC(d_mac), .port_number(port_number));
 
 
 endmodule
