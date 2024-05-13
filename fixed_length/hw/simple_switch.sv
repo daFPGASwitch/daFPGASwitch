@@ -17,7 +17,9 @@ module simple_switch
     logic [7:0] sched_sel;
     logic [3:0] sched_sel_en;
 
-    logic [31:0] meta_in, meta_out;
+    logic [31:0] meta_in;
+    // logic [127:0] meta_out;
+    logic [31:0] meta_out[4];
     logic [127:0] packet;
     logic [127:0] packet_out;
     logic [3:0] packet_out_en;
@@ -103,7 +105,7 @@ module simple_switch
         .egress_in_en(packet_out_en[0]), .egress_in_ack(meta_out_ack[0]),
         
         // Output
-        .egress_out(meta_out)
+        .egress_out(meta_out[0])
     );
     egress egress_1(
         // Input
@@ -112,7 +114,7 @@ module simple_switch
         .egress_in_en(packet_out_en[1]), .egress_in_ack(meta_out_ack[1]),
         
         // Output
-        .egress_out(meta_out)
+        .egress_out(meta_out[1])
     );
     egress egress_2 (
         // Input
@@ -121,7 +123,7 @@ module simple_switch
         .egress_in_en(packet_out_en[2]), .egress_in_ack(meta_out_ack[2]),
         
         // Output
-        .egress_out(meta_out)
+        .egress_out(meta_out[2])
     );
     egress egress_3 (
         // Input
@@ -130,7 +132,7 @@ module simple_switch
         .egress_in_en(packet_out_en[3]), .egress_in_ack(meta_out_ack[3]),
         
         // Output
-        .egress_out(meta_out)
+        .egress_out(meta_out[3])
     );
 
     simple_interface simple_interface (
@@ -145,7 +147,10 @@ module simple_switch
         .chipselect(chipselect),
 
         // Input: hw->interface
-        .interface_in(meta_out),
+        .interface_in_0(meta_out[0]),
+        .interface_in_1(meta_out[1]),
+        .interface_in_2(meta_out[2]),
+        .interface_in_3(meta_out[3]),
         
         // Output: interface->sw
         .readdata(readdata),

@@ -11,6 +11,7 @@ module crossbar #(
     output logic [DATA_WIDTH*EGRESS_CNT-1:0] crossbar_out
 );
 
+    // Comb does not pass quartus
   always_ff @(posedge clk) begin
 
     crossbar_out_en[sched_sel[0 * $clog2(EGRESS_CNT) +: $clog2(EGRESS_CNT)]] <= crossbar_in_en[0];

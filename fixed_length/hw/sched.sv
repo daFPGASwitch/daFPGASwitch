@@ -57,6 +57,7 @@ module sched (
   logic [3:0] busy_egress_mask;
 
   logic [2:0] i;
+  logic [1:0] busy_port;
 
   always_comb begin
     busy_egress_mask = 0; // This is important: busy_egress_mask need a way to start with all unoccupied.
@@ -106,7 +107,7 @@ module sched (
             (start_voq_num[curr_in_2 +: 2] == 3) ? 0 : start_voq_num[curr_in_2 +: 2] + 1; // Alternatively, we can choose not to move forward when no_available_voq.
         end
       end else begin
-        logic [1:0] busy_port = busy_voq_num[curr_in_2 +: 2];
+        busy_port <= busy_voq_num[curr_in_2 +: 2];
         ingress_enable[curr_ingress_idx] <= 1'b1;
         sched_sel[curr_in_2 +: 2] <= busy_port;
         voq_picked[busy_port] <= 1'b1;

@@ -37,7 +37,7 @@ int main(int argc, const char ** argv, const char ** env) {
       dut->address = 2;
       dut -> write = 1;
       dut -> read  = 0;
-      dut->writedata  = 0b01010000010000000000000000000000;
+      dut->writedata  = 0b01110000010000000000000000000000;
     }
     if (time == 60) {
       dut -> chipselect = 0;
@@ -45,13 +45,25 @@ int main(int argc, const char ** argv, const char ** env) {
 
   if (time == 1540) {
       dut->chipselect = 1;
-      dut->address = 2;
+      dut->address = 1;
       dut -> write = 1;
       dut -> read  = 0;
-      dut->writedata  = 0b01010000100000000000000000000000;
+      dut->writedata  = 0b00110000100000000000000000000000;
     }
     if (time == 1560) {
       dut -> chipselect = 0;
+    }
+
+    if (time == 2440) {
+      dut->chipselect = 1;
+      dut->address = 3;
+      dut -> write = 1;
+      dut -> read  = 0;
+      dut->writedata  = 0b10110000100000000000000000000000;
+    }
+    if (time == 2460) {
+      dut -> chipselect = 0;
+      dut -> write = 0;
     }
 
 
@@ -70,7 +82,7 @@ int main(int argc, const char ** argv, const char ** env) {
       dut -> write = 0;
       dut -> chipselect = 1;
       dut -> read = 1;
-      dut -> address = 2;
+      dut -> address = 4;
     }
     if(time == 5020) {
       dut -> chipselect = 0;
@@ -80,7 +92,7 @@ int main(int argc, const char ** argv, const char ** env) {
       dut -> write = 0;
       dut -> chipselect = 1;
       dut -> read = 1;
-      dut -> address = 2;
+      dut -> address = 4;
     }
     if(time == 7020) {
       dut -> chipselect = 0;

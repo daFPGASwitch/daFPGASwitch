@@ -10,7 +10,10 @@ module simple_interface(
     input logic        chipselect,
 
     // From egress
-    input logic [31:0] interface_in,
+    input logic [31:0] interface_in_0,
+    input logic [31:0] interface_in_1,
+    input logic [31:0] interface_in_2,
+    input logic [31:0] interface_in_3,
 
     // To sw
     output logic [31:0] readdata,
@@ -73,22 +76,21 @@ module simple_interface(
         interface_out_en[3] <= 0;
       end
       if (chipselect && read) begin
-        readdata <= interface_in;
         case (address)
           3'h1: begin
-            readdata <= interface_in;
+            readdata <= interface_in_0;
             interface_out_ack[0] <= 1;
           end
           3'h2: begin
-            readdata <= interface_in;
+            readdata <= interface_in_1;
             interface_out_ack[1] <= 1;
           end
           3'h3: begin
-            readdata <= interface_in;
+            readdata <= interface_in_2;
             interface_out_ack[2] <= 1;
           end
           3'h4: begin
-            readdata <= interface_in;
+            readdata <= interface_in_3;
             interface_out_ack[3] <= 1;
           end
           default: begin
