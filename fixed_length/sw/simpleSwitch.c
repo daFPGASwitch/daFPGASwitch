@@ -150,7 +150,7 @@ int main()
 	set_ctrl_register(&pkt_ctrl);
 	print_packet_no_hw(&pkt_ctrl);
 
-	set_all_packet_fields(&pkt_meta, 0, 0, 1);
+	set_all_packet_fields(&pkt_meta, 0, 3, 1);
     for (int i = 0; i < write_num_packets; i++) {
 		send_packet(&pkt_meta);
 		print_packet_no_hw(&pkt_meta);
@@ -159,7 +159,7 @@ int main()
 
 	len = 2;
 
-	set_all_packet_fields(&pkt_meta, 0, 0, 4);
+	set_all_packet_fields(&pkt_meta, 0, 4, 4);
     for (int i = 0; i < 4; i++)
         send_packet(&pkt_meta);
 		print_packet_no_hw(&pkt_meta);
