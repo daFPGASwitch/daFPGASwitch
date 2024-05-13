@@ -174,13 +174,14 @@ int main()
 
 	printf("Requested %d packets\n", num_sent);
 	for (int i = 0; i < 100; i++) {
-        sleep(0.5);
+        sleep(1);
         printf("Port 0\n");
     	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
 			return -1;
 		}
+        sleep(1);
         printf("Port 1\n");
 		print_packet_no_hw(&rcvd_pkt_meta);
             	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_1, &rcvd_pkt_meta) < 0) {
@@ -188,6 +189,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
+        sleep(1);
         printf("Port 2\n");
 		print_packet_no_hw(&rcvd_pkt_meta);
             	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_2, &rcvd_pkt_meta) < 0) {
@@ -195,6 +197,7 @@ int main()
 			close(simple_switch_fd);
 			return -1;
 		}
+        sleep(1);
         printf("Port 3\n");
 		print_packet_no_hw(&rcvd_pkt_meta);
             	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_3, &rcvd_pkt_meta) < 0) {
