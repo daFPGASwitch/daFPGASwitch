@@ -78,7 +78,7 @@ module ingress (
 				alloc_en 					 = 1;
 				packet_start_time_logic      = curr_time;
 				next_in_state 				 = `IN_0;
-				curr_d_write				 = (first_packet == 0) ? 1 : alloc_addr;
+				curr_d_write				 = (first_packet == 1) ? 1 : alloc_addr;
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
 			end
@@ -147,21 +147,18 @@ module ingress (
 			`IN_6: begin
 				voq_enqueue_en               = 0;
 				voq_enqueue_sel              = port_number;
-				if(remaining_packet_length > 0) begin	
-					next_remaining_packet_length = remaining_packet_length - 1;
+				if(remaining_packet_length > 1) begin	
 					next_in_state                   = `IN_6;
-					next_d_mac 					 = d_mac;
-					temp_packet_in 				 = packet_in;
-
-				end else begin 
-					next_remaining_packet_length = 0;
-					next_in_state 					 = `IN_IDLE;
-					next_d_mac 					 = 48'b0;
-					temp_packet_in 				 = 32'b0;
-
+				end else begin
+					next_in_state 					= `IN_IDLE;
 				end
+
+				next_remaining_packet_length = remaining_packet_length - 1;
+				next_d_mac 					 = d_mac;
+				temp_packet_in 				 = packet_in;
+
 				if((curr_time - packet_start_time_logic) % 8 == 0) begin
-					alloc_en = 1;
+					alloc_en 					 = 1;
 					curr_d_write				 = alloc_addr;
 				end else begin
 					alloc_en = 0;
@@ -202,7 +199,7 @@ module ingress (
 			in_state <= `IN_IDLE;
 			curr_time <= 0;
 			remaining_packet_length <= 0;
-			first_packet            <= 0;
+			first_packet            <= 1;
 		end // if reset
 		else begin
 			/* Time driver*/
@@ -210,7 +207,7 @@ module ingress (
 
 			/* Input */
 			if (packet_en) begin
-				first_packet <= 1;
+				first_packet <= 0;
 				in_state <= next_in_state;
 				d_mac <= next_d_mac;
 				remaining_packet_length <= next_remaining_packet_length;
@@ -242,6 +239,7 @@ module ingress (
 	(
 		// Input when inputting
 		.clk(clk), 
+		.reset(reset),
 
 		// From input
     	.remaining_packet_length(remaining_packet_length), // in blocks
