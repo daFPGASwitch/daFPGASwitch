@@ -1,11 +1,12 @@
 .PHONY: lint
 
 PACKET_VAL_FILES = packet_val.sv simple_dual_port_mem.sv port_to_mac.sv mac_to_port.sv
-TOP_FILES = da_fpga_switch.sv packet_gen.sv hw_sw_interface.sv simple_dual_port_mem.sv port_to_mac.sv packet_val.sv mac_to_port.sv
+TOP_FILES = da_fpga_switch.sv packet_gen.sv hw_sw_interface.sv simple_dual_port_mem.sv port_to_mac.sv packet_val.sv mac_to_port.sv ingress.sv
 CMU_FILES = cmu.sv true_dual_port_mem.sv
 PACKET_GEN_FILES = packet_gen.sv simple_dual_port_mem.sv port_to_mac.sv
-SVFILES = cmu.sv sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv crossbar.sv
+SVFILES = cmu.sv sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv true_dual_port_mem.sv crossbar.sv ingress.sv
 SCHED_FILES = sched.sv pick_voq.sv
+INGRESS_FILES = ingress.sv $(CMU_FILES) simple_dual_port_mem.sv mac_to_port.sv
 
 # Run Verilator simulations
 
@@ -41,6 +42,9 @@ cmu.vcd : obj_dir/Vcmu
 sched.vcd : obj_dir/Vsched
 	obj_dir/Vsched
 
+ingress.vcd : obj_dir/Vingress
+	obj_dir/Vingress
+
 vmu.vcd : obj_dir/Vvmu
 	obj_dir/Vvmu
 
@@ -69,6 +73,12 @@ obj_dir/Vpick_voq : pick_voq.sv verilator/pick_voq.cpp
 	verilator -Wall -cc pick_voq.sv -exe verilator/pick_voq.cpp \
 		-top-module pick_voq
 	cd obj_dir && make -j -f Vpick_voq.mk
+
+obj_dir/Vingress : $(INGRESS_FILES) verilator/ingress.cpp
+	verilator -Wall -cc $(INGRESS_FILES) -exe verilator/ingress.cpp \
+		-top-module ingress
+	cd obj_dir && make -j -f Vingress.mk
+
 
 obj_dir/Vcrossbar : crossbar.sv verilator/crossbar.cpp
 	verilator -Wall -cc crossbar.sv -exe verilator/crossbar.cpp \
