@@ -229,7 +229,7 @@ static int simple_remove(struct platform_device *pdev)
 /* Which "compatible" string(s) to search for in the Device Tree */
 #ifdef CONFIG_OF
 static const struct of_device_id simple_of_match[] = {
-	{ .compatible = "csee4840,simple_switch-1.0" },
+	{ .compatible = "unknown,unknown-1.0" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, simple_of_match);
