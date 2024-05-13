@@ -15,6 +15,9 @@ int simple_switch_fd;
 // typedef unsigned int packet_ctrl_t;
 // packet_info_t;
 
+int num_sent = 0;
+int num_get = 0;
+
 void open_simple_device()
 {
     simple_switch_fd = open(DEVICE_PATH, O_RDWR);
@@ -62,6 +65,8 @@ void send_packet(const packet_meta_t *pkt_meta)
     if (ioctl(simple_switch_fd, SIMPLE_WRITE_PACKET, pkt_meta) < 0) {
         perror("Failed to send packet");
         return;
+    } else {
+        num_sent++;
     }
 }
 
@@ -104,8 +109,6 @@ void set_all_packet_fields(packet_meta_t *pkt_meta, unsigned int dst,
 
 int main()
 {
-    int num_sent = 0;
-    int num_get = 0;
     packet_meta_t pkt_meta, rcvd_pkt_meta;
     packet_ctrl_t pkt_ctrl;
     int total_latency = 0;
@@ -116,25 +119,26 @@ int main()
     pkt_ctrl = 0;
 	set_ctrl_register(&pkt_ctrl);
 	print_packet(&pkt_ctrl);
+    usleep(1000);
 
     // Set control register (CTRL=1)
 	printf("Start sending\n");
     pkt_ctrl = 1;
 	set_ctrl_register(&pkt_ctrl);
 	print_packet(&pkt_ctrl);
+    usleep(1000);
 
     for (int i = 0; i < 12; i++) {
         set_all_packet_fields(&pkt_meta, (i+1)%4, i%4, 1);
 		send_packet(&pkt_meta);
 		print_packet(&pkt_meta);
 	}
-	num_sent += 10;
+
 
     for (int i = 0; i < 12; i++)
         set_all_packet_fields(&pkt_meta, (i+3)%4, (i+1)%4, 1);
         send_packet(&pkt_meta);
 		print_packet(&pkt_meta);
-	num_sent += 10;
 
 	printf("Start recving\n");
 	pkt_ctrl = 2;
