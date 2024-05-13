@@ -161,7 +161,7 @@ int main()
 
 	set_all_packet_fields(&pkt_meta, 0, 4, 4);
     for (int i = 0; i < 10; i++)
-        set_all_packet_fields(&pkt_meta, i%4, i%4 + 1, 4);
+        set_all_packet_fields(&pkt_meta, i%4, (i+1)%4, 4);
         send_packet(&pkt_meta);
 		print_packet_no_hw(&pkt_meta);
 	num_sent += write_num_packets;
