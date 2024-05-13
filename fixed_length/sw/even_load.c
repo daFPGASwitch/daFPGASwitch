@@ -127,14 +127,14 @@ int main()
 	print_packet(&pkt_ctrl);
     usleep(1000);
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 30; i++) {
         set_all_packet_fields(&pkt_meta, (i+1)%4, i%4, 1);
 		send_packet(&pkt_meta);
 		print_packet(&pkt_meta);
 	}
 
     usleep(10000);
-	printf("Start recving\n");
+    printf("Start recving\n");
 	pkt_ctrl = 2;
 	set_ctrl_register(&pkt_ctrl);
 	print_packet(&pkt_ctrl);

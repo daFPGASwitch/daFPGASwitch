@@ -120,7 +120,6 @@ static long simple_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
     // We need to READ OUT Whatever's available from the 4 egress
     case SIMPLE_READ_PACKET_0:
         pm = ioread32(META_DATA_0(dev.virtbase));
-		printk(KERN_INFO "DAREAD0 %u", pm);
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
