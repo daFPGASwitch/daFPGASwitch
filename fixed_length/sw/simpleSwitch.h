@@ -4,7 +4,7 @@
 
 packet_meta_t set_src_port(packet_meta_t meta, unsigned int port) {
     if (port > 3) {
-        printf("Ports number should be btw 0 and 3");
+        printf("Ports number (%u) should be btw 0 and 3. \n");
         return meta;
     }
     meta &= ~(0x3 << 30);
@@ -29,7 +29,7 @@ packet_meta_t set_src_port(packet_meta_t meta, unsigned int port) {
 
 packet_meta_t set_dst_port(packet_meta_t meta, unsigned int port) {
     if (port > 3) {
-        printf("Ports number should be btw 0 and 3");
+        printf("Ports number (%u) should be btw 0 and 3. \n");
         return meta;
     }
     // Clear the bits 28 and 29
