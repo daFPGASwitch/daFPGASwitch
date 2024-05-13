@@ -1,6 +1,7 @@
 module sched (
     input logic clk,
-    // input logic [1:0] policy, // We have doubly RR, or no RR, or sth else, can be controlled by software
+    // input logic policy, // We have doubly RR, or priority based, can be controlled by software
+    // input logic [7:0] priority,
     input logic sched_en,
     input logic [3:0] is_busy,
     input logic [7:0] busy_voq_num,

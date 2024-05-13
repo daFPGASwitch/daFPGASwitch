@@ -29,6 +29,7 @@ module vmu #(
     parameter EGRESS_CNT = 4 /* How many egress there are; which is also how many voqs there are. */
 ) (
     input logic clk,
+    input logic reset,
     input logic voq_enqueue_en,
     input logic [$clog2(EGRESS_CNT)-1:0] voq_enqueue_sel,
     input logic voq_dequeue_en,
@@ -56,12 +57,23 @@ module vmu #(
 
 
     always @(posedge clk) begin
-        if (voq_enqueue_en && !is_full[voq_enqueue_sel]) begin
-            end_idx[voq_enqueue_sel] <= (end_idx[voq_enqueue_sel] != PACKET_CNT - 1) ? end_idx[voq_enqueue_sel] + 1 : 0;
-        end
-        
-        if (voq_dequeue_en && !is_empty[voq_dequeue_sel]) begin
-            start_idx[voq_dequeue_sel] <=  (start_idx[voq_dequeue_sel] != PACKET_CNT - 1) ? start_idx[voq_dequeue_sel] + 1 : 0;
+        if (reset) begin
+            start_idx[0] <= 0;
+            start_idx[1] <= 0;
+            start_idx[0] <= 0;
+            start_idx[1] <= 0;
+            end_idx[0] <= 0;
+            end_idx[1] <= 0;
+            end_idx[2] <= 0;
+            end_idx[3] <= 0;
+        end else begin
+            if (voq_enqueue_en && !is_full[voq_enqueue_sel]) begin
+                end_idx[voq_enqueue_sel] <= (end_idx[voq_enqueue_sel] != PACKET_CNT - 1) ? end_idx[voq_enqueue_sel] + 1 : 0;
+            end
+            
+            if (voq_dequeue_en && !is_empty[voq_dequeue_sel]) begin
+                start_idx[voq_dequeue_sel] <=  (start_idx[voq_dequeue_sel] != PACKET_CNT - 1) ? start_idx[voq_dequeue_sel] + 1 : 0;
+            end
         end
     end
 

@@ -24,6 +24,8 @@ module simple_interface(
 
     // Experimenting
     output logic experimenting,
+    output logic simple_reset,
+    // output logic send_only,
 
     // Special case: Because we're polling but not handling interrupt
     // we need to acknowledge that this metadata is consumed by the software.
@@ -32,12 +34,16 @@ module simple_interface(
 );
 
   logic [31:0] ctrl;
+  logic prev_read;
 
   always_comb begin
-    experimenting = (ctrl == 2);
+    experimenting = (ctrl[1:0] == 2);
+    // send_only = (ctrl == 1);
+    simple_reset = (ctrl[1:0] == 0) || reset;
   end
 
   always_ff @(posedge clk) begin
+    prev_read <= read;
     if (reset) begin
       ctrl <= 32'h0;
       readdata <= 32'h0;
@@ -75,7 +81,7 @@ module simple_interface(
         interface_out_en[2] <= 0;
         interface_out_en[3] <= 0;
       end
-      if (chipselect && read) begin // Need rising edge detection?
+      if (chipselect && read && prev_read == 0) begin // Need rising edge detection?
         case (address)
           3'h1: begin
             readdata <= interface_in_0;

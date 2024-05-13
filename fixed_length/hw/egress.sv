@@ -22,6 +22,10 @@ module egress #(
   logic [$clog2(PACKET_CNT)-1:0] end_idx;  // One pass the last element
 
     always @(posedge clk) begin
+        if (reset) begin
+            start_idx <= 0;
+            end_idx <= 0;
+        end
         if (egress_in_en) begin
             end_idx <= (end_idx != 1023) ? end_idx + 1 : 0;
         end

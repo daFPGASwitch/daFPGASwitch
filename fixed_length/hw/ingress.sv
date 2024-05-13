@@ -34,9 +34,9 @@ module ingress #(
 	vmu #(.PACKET_CNT(1024), .EGRESS_CNT(4)) voq_mu
 	(
 		// Input
-		.clk(clk), 
+		.clk(clk), .reset(reset),
 		.voq_enqueue_en(ingress_in_en && !is_full[port_num]), .voq_enqueue_sel(port_num),
-		.voq_dequeue_en(sched_en), .voq_dequeue_sel(sched_sel),
+		.voq_dequeue_en(sched_en && !is_empty[sched_sel]), .voq_dequeue_sel(sched_sel),
 		.meta_in(ingress_in),
 
 		// Output

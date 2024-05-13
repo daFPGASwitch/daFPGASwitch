@@ -28,6 +28,10 @@ module simple_switch
     logic [31:0] counter;
     logic [3:0] cycle;
     logic sched_en;
+    logic simple_reset;
+    logic global_reset;
+
+    assign global_reset = simple_reset || reset;
 
     always_ff @(posedge clk) begin
         cycle <= (cycle == 15) ? 0 : cycle + 1;
@@ -42,7 +46,7 @@ module simple_switch
     
     ingress ingress_0 (
         // Input
-        .clk(clk), .reset(reset),
+        .clk(clk), .reset(global_reset),
         .ingress_in_en(meta_in_en[0]), .experimenting(experimenting),
         .ingress_in(meta_in),
         .sched_en(sched_sel_en[0] && experimenting),
@@ -56,7 +60,7 @@ module simple_switch
 
     ingress ingress_1 (
         // Input
-        .clk(clk), .reset(reset),
+        .clk(clk), .reset(global_reset),
         .ingress_in_en(meta_in_en[1]), .experimenting(experimenting),
         .ingress_in(meta_in),
         .sched_en(sched_sel_en[1] && experimenting),
@@ -70,7 +74,7 @@ module simple_switch
 
     ingress ingress_2 (
         // Input
-        .clk(clk), .reset(reset),
+        .clk(clk), .reset(global_reset),
         .experimenting(experimenting),
         .ingress_in_en(meta_in_en[2]),
         .ingress_in(meta_in),
@@ -86,7 +90,7 @@ module simple_switch
 
     ingress ingress_3 (
         // Input
-        .clk(clk), .reset(reset),
+        .clk(clk), .reset(global_reset),
         .ingress_in_en(meta_in_en[3]), .experimenting(experimenting),
         .ingress_in(meta_in),
         .sched_en(sched_sel_en[3] && experimenting),
@@ -100,7 +104,7 @@ module simple_switch
 
     egress egress_0(
         // Input
-        .clk(clk), .reset(reset),
+        .clk(clk), .reset(global_reset),
         .egress_in(packet_out[31:0]),
         .egress_in_en(packet_out_en[0]), .egress_in_ack(meta_out_ack[0]),
         
@@ -109,7 +113,7 @@ module simple_switch
     );
     egress egress_1(
         // Input
-        .clk(clk), .reset(reset),
+        .clk(clk), .reset(global_reset),
         .egress_in(packet_out[63:32]),
         .egress_in_en(packet_out_en[1]), .egress_in_ack(meta_out_ack[1]),
         
@@ -118,7 +122,7 @@ module simple_switch
     );
     egress egress_2 (
         // Input
-        .clk(clk), .reset(reset),
+        .clk(clk), .reset(global_reset),
         .egress_in(packet_out[95:64]),
         .egress_in_en(packet_out_en[2]), .egress_in_ack(meta_out_ack[2]),
         
@@ -127,7 +131,7 @@ module simple_switch
     );
     egress egress_3 (
         // Input
-        .clk(clk), .reset(reset),
+        .clk(clk), .reset(global_reset),
         .egress_in(packet_out[127:96]),
         .egress_in_en(packet_out_en[3]), .egress_in_ack(meta_out_ack[3]),
         
@@ -163,7 +167,8 @@ module simple_switch
         .interface_out(meta_in),
 
         // Output: Ongoing experiment.
-        .experimenting(experimenting)
+        .experimenting(experimenting),
+        .simple_reset(simple_reset)
 
     );
 
