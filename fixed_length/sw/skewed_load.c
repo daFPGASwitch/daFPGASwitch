@@ -61,7 +61,7 @@ void set_ctrl_register(const packet_ctrl_t *pkt_ctrl)
 
 void send_packet(const packet_meta_t *pkt_meta)
 {
-    usleep(10000);
+    usleep(5000);
     if (ioctl(simple_switch_fd, SIMPLE_WRITE_PACKET, pkt_meta) < 0) {
         perror("Failed to send packet");
         return;
@@ -118,12 +118,14 @@ int main()
     pkt_ctrl = 0;
 	set_ctrl_register(&pkt_ctrl);
 	print_packet(&pkt_ctrl);
+    usleep(1000);
 
     // Set control register (CTRL=1)
 	printf("Start sending\n");
     pkt_ctrl = 1;
 	set_ctrl_register(&pkt_ctrl);
 	print_packet(&pkt_ctrl);
+    usleep(1000);
 
     for (int i = 0; i < 12; i++) {
         set_all_packet_fields(&pkt_meta, (i+1)%2, i%4, 1);
@@ -158,6 +160,7 @@ int main()
             total_latency += extra_time_delta(rcvd_pkt_meta);
             num_get++;
         }
+        usleep(1000);
         if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_1, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
@@ -169,6 +172,7 @@ int main()
             total_latency += extra_time_delta(rcvd_pkt_meta);
             num_get++;
         }
+        usleep(1000);
         if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_2, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
@@ -180,6 +184,7 @@ int main()
             total_latency += extra_time_delta(rcvd_pkt_meta);
             num_get++;
         }
+        usleep(1000);
         if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_3, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
