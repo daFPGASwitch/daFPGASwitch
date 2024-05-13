@@ -1,6 +1,6 @@
 .PHONY: lint
 
-TOP_FILES = simple_switch.sv simple_interface.sv simple_dual_port_mem.sv
+TOP_FILES = simple_switch.sv simple_interface.sv simple_dual_port_mem.sv crossbar.sv sched.sv
 
 SVFILES = sched.sv pick_voq.sv vmu.sv simple_dual_port_mem.sv crossbar.sv
 SCHED_FILES = sched.sv pick_voq.sv

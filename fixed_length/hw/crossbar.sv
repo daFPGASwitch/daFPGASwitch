@@ -1,5 +1,5 @@
 module crossbar #(
-    parameter DATA_WIDTH = 2, // For testing
+    parameter DATA_WIDTH = 32, // For testing
     parameter EGRESS_CNT = 4
 ) (
     input logic [$clog2(EGRESS_CNT)*EGRESS_CNT-1:0] sched_sel,

@@ -15,37 +15,25 @@ module simple_switch
     logic [3:0] packet_en;
     logic [3:0] meta_out_ack;
     logic [7:0] sched_sel;
-    logic [3:0] sched_en;
+    logic [3:0] sched_sel_en;
 
     logic [31:0] meta_in, meta_out;
     logic [127:0] packet;
+    logic [127:0] packet_out;
+    logic [3:0] packet_out_en;
     logic experimenting;
     logic [15:0] empty;
     logic [31:0] counter;
     logic [3:0] cycle;
+    logic sched_en;
 
     always_ff @(posedge clk) begin
         cycle <= (cycle == 15) ? 0 : cycle + 1;
         if (experimenting) begin
             if (cycle == 0) begin
-                counter <= counter + 1;
-                // call_out scheduler
-                sched_sel[1:0] <= 0;
-                sched_sel[3:2] <= 1;
-                sched_sel[5:4] <= 2;
-                sched_sel[7:6] <= 3;
-            end
-            if (cycle == 1) begin
-                sched_en[0] <= 1;
-                sched_en[1] <= 1;
-                sched_en[2] <= 1;
-                sched_en[3] <= 1;
-            end
-            if (cycle == 2) begin
-                sched_en[0] <= 0;
-                sched_en[1] <= 0;
-                sched_en[2] <= 0;
-                sched_en[3] <= 0;
+                sched_en <= 1;
+            end else if (cycle == 1) begin
+                sched_en <= 0;
             end
         end
     end
@@ -55,11 +43,12 @@ module simple_switch
         .clk(clk), .reset(reset),
         .ingress_in_en(meta_in_en[0]), .experimenting(experimenting),
         .ingress_in(meta_in),
-        .sched_en(sched_en[0]),
+        .sched_en(sched_sel_en[0] && experimenting),
         .sched_sel(sched_sel[1:0]),
     
         // Output
-        .ingress_out_en(packet_en[0]), .ingress_out(packet[32 * sched_sel[1:0] +: 32]),
+        // .ingress_out_en(packet_en[0]),
+        .ingress_out(packet[32 * sched_sel[1:0] +: 32]),
         .is_empty(empty[3:0])
     );
 
@@ -68,11 +57,12 @@ module simple_switch
         .clk(clk), .reset(reset),
         .ingress_in_en(meta_in_en[1]), .experimenting(experimenting),
         .ingress_in(meta_in),
-        .sched_en(sched_en[1]),
+        .sched_en(sched_sel_en[1] && experimenting),
         .sched_sel(sched_sel[3:2]),
     
         // Output
-        .ingress_out_en(packet_en[1]), .ingress_out(packet[32 * sched_sel[3:2] +: 32]),
+        // .ingress_out_en(packet_en[1]),
+        .ingress_out(packet[32 * sched_sel[3:2] +: 32]),
         .is_empty(empty[7:4])
     );
 
@@ -82,12 +72,13 @@ module simple_switch
         .experimenting(experimenting),
         .ingress_in_en(meta_in_en[2]),
         .ingress_in(meta_in),
-        .sched_en(sched_en[2]),
+        .sched_en(sched_sel_en[2] && experimenting),
         .sched_sel(sched_sel[5:4]),
 
     
         // Output
-        .ingress_out_en(packet_en[2]), .ingress_out(packet[32 * sched_sel[5:4] +: 32]),
+        // .ingress_out_en(packet_en[2]),
+        .ingress_out(packet[32 * sched_sel[5:4] +: 32]),
         .is_empty(empty[11:8])
     );
 
@@ -96,20 +87,20 @@ module simple_switch
         .clk(clk), .reset(reset),
         .ingress_in_en(meta_in_en[3]), .experimenting(experimenting),
         .ingress_in(meta_in),
-        .sched_en(sched_en[3]),
+        .sched_en(sched_sel_en[3] && experimenting),
         .sched_sel(sched_sel[7:6]),
     
         // Output
-        .ingress_out_en(packet_en[3]), .ingress_out(packet[32 * sched_sel[7:6] +: 32]),
+        // .ingress_out_en(packet_en[3]),
+        .ingress_out(packet[32 * sched_sel[7:6] +: 32]),
         .is_empty(empty[15:12])
     );
 
     egress egress_0(
         // Input
         .clk(clk), .reset(reset),
-        .egress_in(packet[31:0]),
-        .egress_in_en(packet_en[0]), .egress_in_ack(meta_out_ack[0]),
-        
+        .egress_in(packet_out[31:0]),
+        .egress_in_en(packet_out_en[0]), .egress_in_ack(meta_out_ack[0]),
         
         // Output
         .egress_out(meta_out)
@@ -117,8 +108,8 @@ module simple_switch
     egress egress_1(
         // Input
         .clk(clk), .reset(reset),
-        .egress_in(packet[63:32]),
-        .egress_in_en(packet_en[1]), .egress_in_ack(meta_out_ack[1]),
+        .egress_in(packet_out[63:32]),
+        .egress_in_en(packet_out_en[1]), .egress_in_ack(meta_out_ack[1]),
         
         // Output
         .egress_out(meta_out)
@@ -126,8 +117,8 @@ module simple_switch
     egress egress_2 (
         // Input
         .clk(clk), .reset(reset),
-        .egress_in(packet[95:64]),
-        .egress_in_en(packet_en[2]), .egress_in_ack(meta_out_ack[2]),
+        .egress_in(packet_out[95:64]),
+        .egress_in_en(packet_out_en[2]), .egress_in_ack(meta_out_ack[2]),
         
         // Output
         .egress_out(meta_out)
@@ -135,8 +126,8 @@ module simple_switch
     egress egress_3 (
         // Input
         .clk(clk), .reset(reset),
-        .egress_in(packet[127:96]),
-        .egress_in_en(packet_en[3]), .egress_in_ack(meta_out_ack[3]),
+        .egress_in(packet_out[127:96]),
+        .egress_in_en(packet_out_en[3]), .egress_in_ack(meta_out_ack[3]),
         
         // Output
         .egress_out(meta_out)
@@ -169,6 +160,24 @@ module simple_switch
         // Output: Ongoing experiment.
         .experimenting(experimenting)
 
+    );
+
+    crossbar crossbar (
+        .sched_sel(sched_sel),
+        .crossbar_in_en(sched_sel_en),
+        .crossbar_in(packet),
+        .crossbar_out_en(packet_out_en),
+        .crossbar_out(packet_out)
+    );
+
+    sched scheduler (
+        .clk(clk),
+        .sched_en(sched_en),
+        .is_busy(0),
+        .busy_voq_num(0),
+        .voq_empty(empty),
+        .sched_sel_en(sched_sel_en), // passed by to ingress, to know which ingress should dequeue
+        .sched_sel(sched_sel) // passed by to ingress, to know which voq to dequeue
     );
 
 endmodule

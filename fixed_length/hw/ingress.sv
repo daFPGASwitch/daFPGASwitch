@@ -14,7 +14,7 @@ module ingress #(
     input  logic [1:0]            sched_sel,
 
 	// To crossbar
-    output logic                  ingress_out_en,
+    // output logic                  ingress_out_en,
     output logic [31:0]           ingress_out,
 
   // To sched
@@ -24,12 +24,12 @@ module ingress #(
   logic [3:0] is_full;
   assign port_num = ingress_in[31:30];
 
-  always @(posedge clk) begin
-    if (sched_en)
-      ingress_out_en <= 1;
-    else if (ingress_out_en)
-      ingress_out_en <= 0;
-  end
+  // always @(posedge clk) begin
+  //   if (sched_en)
+  //     ingress_out_en <= 1;
+  //   else if (ingress_out_en)
+  //     ingress_out_en <= 0;
+  // end
 
 	vmu #(.PACKET_CNT(1024), .EGRESS_CNT(4)) voq_mu
 	(
