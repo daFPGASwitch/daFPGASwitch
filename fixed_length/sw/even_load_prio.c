@@ -127,7 +127,7 @@ int main()
 	print_packet(&pkt_ctrl);
     usleep(1000);
 
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 32; i++) {
         set_all_packet_fields(&pkt_meta, (i+1)%4, i%4, 1);
 		send_packet(&pkt_meta);
 		print_packet(&pkt_meta);

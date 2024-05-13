@@ -127,13 +127,13 @@ int main()
 	print_packet(&pkt_ctrl);
     usleep(1000);
 
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 16; i++) {
         set_all_packet_fields(&pkt_meta, (i+1)%2, i%4, 1);
 		send_packet(&pkt_meta);
 		print_packet(&pkt_meta);
 	}
 
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 16; i++) {
         set_all_packet_fields(&pkt_meta, (i+3)%4, (i+1)%4, 1);
         send_packet(&pkt_meta);
 		print_packet(&pkt_meta);
