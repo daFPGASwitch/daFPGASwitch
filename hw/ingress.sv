@@ -16,9 +16,10 @@
 
 module ingress (
 	input logic 		clk,
+    input logic         reset,
 	input logic	[31:0]	packet_in, // From packet gen, getting packet
 	input logic 		packet_en, // From packet gen, meaning that we should start recving a packet segment
-	input logic 		new_packet_en, // From packet gen, meaning that we should start recving a new packet
+	//input logic 		new_packet_en, // From packet gen, meaning that we should start recving a new packet
 
 	input logic [1:0]	sched_sel, // From scheduler, the voq to dequeue the packet
 	input logic			sched_done, // (actually SCHED_ENABLE) From scheduler, meaning that we should start sending a packet segment
@@ -28,7 +29,7 @@ module ingress (
 	output logic		packet_out_en // To crossbar
 );
 
-	logic [2:0] input_counter;
+	//logic [2:0] input_counter;
 	logic [2:0] send_cycle_counter, next_send_cycle_counter;
 	
 	logic [5:0]  next_remaining_packet_length, remaining_packet_length;
@@ -49,7 +50,7 @@ module ingress (
 	assign meta_in = (first_packet == 1) ? 10'b1 : alloc_addr;
 	/* States */
 
-	logic [3:0] out_state, next_out_state;
+	logic [1:0] out_state, next_out_state;
 
 	/* time */
 	logic [31:0] curr_time;
@@ -67,7 +68,7 @@ module ingress (
 
 	logic free_en;
 	logic [9:0] free_addr, next_free_addr, voq_meta_out, voq_meta_out_reg, free_addr_reg, next_free_addr_reg;
-	logic is_empty, is_full;
+	logic [3:0] is_empty, is_full;
 	logic        voq_dequeue_en;
 	logic [1:0]  voq_dequeue_sel;
 
@@ -211,10 +212,10 @@ module ingress (
 				end else begin 
 					alloc_en = 1;
 					curr_d_write				 = alloc_addr;
-				end else begin
+				end /*else begin
 					alloc_en = 0;
 					curr_d_write				 = alloc_addr + ((curr_time - packet_start_time_logic) % 8);
-				end
+				end*/
 				
 
 			end
@@ -227,7 +228,7 @@ module ingress (
 				free_addr = voq_meta_out;
 				voq_meta_out_reg = meta_out;
 				next_send_cycle_counter = 0;
-				next_out_state = (sched_done) ? `SEND_META_2_CMU : `IDLE_SND; // no packet or no decision
+				next_out_state = (sched_done) ? `SEND_META_2_CMU : `IDLE; // no packet or no decision
 			end
 			`SEND_META_2_CMU: begin
 				free_en = 1'b1;
@@ -269,7 +270,7 @@ module ingress (
 
 	always_ff @(posedge clk) begin
 		if (reset) begin
-			in_state <= `IDLE;
+			in_state <= `IN_IDLE;
 			out_state <= `IDLE;
 			curr_time <= 0;
 			remaining_packet_length <= 0;
@@ -303,7 +304,7 @@ module ingress (
 		.clk(clk), 
 		.voq_enqueue_en(voq_enqueue_en), .voq_enqueue_sel(voq_enqueue_sel),
 		.voq_dequeue_en(sched_done), .voq_dequeue_sel(sched_sel),
-		.meta_in(alloc_addr),
+		.meta_in(meta_in),
 		// Output
 		.meta_out(meta_out),
 		.is_empty(is_empty), .is_full(is_full)
@@ -311,7 +312,8 @@ module ingress (
 
 	cmu ctrl_mu(
 		// Input when inputting
-		.clk(clk), 
+		.clk(clk),
+        .reset(reset), 
 		// From input
 		.remaining_packet_length(remaining_packet_length), // in blocks
 		.alloc_en(alloc_en), // writing data in
@@ -331,7 +333,7 @@ module ingress (
 		.write(packet_en)
 	);
 
-	mac_to_port mac_to_port_2(.DMAC(dmac), .port_number(port_number));
+	mac_to_port mac_to_port_2(.MAC(d_mac), .port_number(port_number));
 
 
 endmodule
