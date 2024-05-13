@@ -22,7 +22,7 @@ module ingress #(
 );
   logic [1:0] port_num;
   logic [3:0] is_full;
-  assign port_num = ingress_in[31:30];
+  assign port_num = ingress_in[29:28];
 
   // always @(posedge clk) begin
   //   if (sched_en)

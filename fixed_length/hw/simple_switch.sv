@@ -48,7 +48,7 @@ module simple_switch
     
         // Output
         // .ingress_out_en(packet_en[0]),
-        .ingress_out(packet[32 * sched_sel[1:0] +: 32]),
+        .ingress_out(packet[31:0]),
         .is_empty(empty[3:0])
     );
 
@@ -62,7 +62,7 @@ module simple_switch
     
         // Output
         // .ingress_out_en(packet_en[1]),
-        .ingress_out(packet[32 * sched_sel[3:2] +: 32]),
+        .ingress_out(packet[63:32]),
         .is_empty(empty[7:4])
     );
 
@@ -78,7 +78,7 @@ module simple_switch
     
         // Output
         // .ingress_out_en(packet_en[2]),
-        .ingress_out(packet[32 * sched_sel[5:4] +: 32]),
+        .ingress_out(packet[95:64]),
         .is_empty(empty[11:8])
     );
 
@@ -92,7 +92,7 @@ module simple_switch
     
         // Output
         // .ingress_out_en(packet_en[3]),
-        .ingress_out(packet[32 * sched_sel[7:6] +: 32]),
+        .ingress_out(packet[127:96]),
         .is_empty(empty[15:12])
     );
 
@@ -163,6 +163,7 @@ module simple_switch
     );
 
     crossbar crossbar (
+        .clk(clk),
         .sched_sel(sched_sel),
         .crossbar_in_en(sched_sel_en),
         .crossbar_in(packet),
