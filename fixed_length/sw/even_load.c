@@ -141,8 +141,8 @@ int main()
     usleep(10000);
 
 	printf("Requested %d packets\n", num_sent);
-	for (int i = 0; i < 1000; i++) {
-        usleep(1000);
+	for (int i = 0; i < 100; i++) {
+        usleep(10000);
     	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
@@ -154,6 +154,7 @@ int main()
             total_latency += extra_time_delta(rcvd_pkt_meta);
             num_get++;
         }
+        usleep(10000);
         if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_1, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
@@ -165,6 +166,7 @@ int main()
             total_latency += extra_time_delta(rcvd_pkt_meta);
             num_get++;
         }
+        usleep(10000);
         if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_2, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
@@ -176,6 +178,7 @@ int main()
             total_latency += extra_time_delta(rcvd_pkt_meta);
             num_get++;
         }
+        usleep(10000);
         if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_3, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
 			close(simple_switch_fd);
