@@ -12,6 +12,7 @@ module ingress #(
     input  logic                  experimenting,
     input  logic                  sched_en,
     input  logic [1:0]            sched_sel,
+    input  logic [10:0]          time_stamp,
 
 	// To crossbar
     // output logic                  ingress_out_en,
@@ -22,7 +23,9 @@ module ingress #(
 );
   logic [1:0] port_num;
   logic [3:0] is_full;
+  logic [31:0] meta_out;
   assign port_num = ingress_in[29:28];
+  assign ingress_out = {meta_out[31:11], time_stamp};
 
   // always @(posedge clk) begin
   //   if (sched_en)
@@ -37,10 +40,11 @@ module ingress #(
 		.clk(clk), .reset(reset),
 		.voq_enqueue_en(ingress_in_en && !is_full[port_num]), .voq_enqueue_sel(port_num),
 		.voq_dequeue_en(sched_en && !is_empty[sched_sel]), .voq_dequeue_sel(sched_sel),
-		.meta_in(ingress_in),
+		.meta_in({ingress_in[31:22],time_stamp,ingress_in[10:0]}),
+    .time_stamp(time_stamp),
 
 		// Output
-		.meta_out(ingress_out),
+		.meta_out(meta_out),
 		.is_empty(is_empty), .is_full(is_full)
 	);
 
