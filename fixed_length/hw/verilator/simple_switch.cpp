@@ -54,6 +54,7 @@ int main(int argc, const char ** argv, const char ** env) {
       dut -> chipselect = 0;
     }
 
+  
     if (time == 2440) {
       dut->chipselect = 1;
       dut->address = 3;
@@ -66,15 +67,51 @@ int main(int argc, const char ** argv, const char ** env) {
       dut -> write = 0;
     }
 
+    if (time == 3040) {
+      dut->chipselect = 1;
+      dut->address = 1;
+      dut -> write = 1;
+      dut -> read  = 0;
+      dut->writedata  = 0b00100000100000000000000000000000;
+    }
 
-    if(time == 3000) {
+    if (time == 3060) {
+      dut -> chipselect = 0;
+    }
+
+        if (time == 3040) {
+      dut->chipselect = 1;
+      dut->address = 1;
+      dut -> write = 1;
+      dut -> read  = 0;
+      dut->writedata  = 0b00100000100000000000000000000000;
+    }
+
+    if (time == 3560) {
+      dut -> chipselect = 0;
+    }
+            if (time == 3040) {
+      dut->chipselect = 1;
+      dut->address = 2;
+      dut -> write = 1;
+      dut -> read  = 0;
+      dut->writedata  = 0b01100000100000000000000000000000;
+    }
+    if (time == 3060) {
+      dut -> chipselect = 0;
+      dut -> write = 0;
+    }
+
+
+
+    if(time == 4000) {
       dut -> write = 1;
       dut -> chipselect = 1;
       dut -> read = 0;
       dut -> address = 0;
       dut->writedata = 2;
     }
-    if(time == 3020) {
+    if(time == 4020) {
       dut -> chipselect = 0;
     }
   
@@ -96,6 +133,26 @@ int main(int argc, const char ** argv, const char ** env) {
     }
     if(time == 7020) {
       dut -> chipselect = 0;
+    }
+
+    if(time == 8000) {
+      dut -> write = 0;
+      dut -> chipselect = 1;
+      dut -> read = 1;
+      dut -> address = 3;
+    }
+    if(time == 8020) {
+      dut -> chipselect = 0;
+    }
+    if(time == 9000) {
+      dut -> write = 0;
+      dut -> chipselect = 1;
+      dut -> read = 1;
+      dut -> address = 3;
+    }
+    if(time == 9020) {
+      dut -> chipselect = 0;
+      dut -> read = 0;
     }
 
     dut->eval();     // Run the simulation for a cycle

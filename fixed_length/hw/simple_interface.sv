@@ -75,7 +75,7 @@ module simple_interface(
         interface_out_en[2] <= 0;
         interface_out_en[3] <= 0;
       end
-      if (chipselect && read) begin
+      if (chipselect && read) begin // Need rising edge detection?
         case (address)
           3'h1: begin
             readdata <= interface_in_0;
