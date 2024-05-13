@@ -61,13 +61,12 @@ void set_ctrl_register(const packet_ctrl_t *pkt_ctrl)
 
 void send_packet(const packet_meta_t *pkt_meta)
 {
-    usleep(1000);
+    usleep(10000);
     if (ioctl(simple_switch_fd, SIMPLE_WRITE_PACKET, pkt_meta) < 0) {
         perror("Failed to send packet");
         return;
-    } else {
-        num_sent++;
     }
+    num_sent++;
 }
 
 // void receive_packet(int packet_id, packet_meta_t *pkt_meta)
@@ -140,13 +139,15 @@ int main()
         send_packet(&pkt_meta);
 		print_packet(&pkt_meta);
 
+    usleep(10000);
 	printf("Start recving\n");
 	pkt_ctrl = 2;
 	set_ctrl_register(&pkt_ctrl);
 	print_packet(&pkt_ctrl);
+    usleep(10000);
 
 	printf("Requested %d packets\n", num_sent);
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 1000; i++) {
         usleep(1000);
     	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
 			perror("ioctl read packet failed");
