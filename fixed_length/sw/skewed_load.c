@@ -131,10 +131,11 @@ int main()
 		print_packet(&pkt_meta);
 	}
 
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 12; i++) {
         set_all_packet_fields(&pkt_meta, (i+3)%4, (i+1)%4, 1);
         send_packet(&pkt_meta);
 		print_packet(&pkt_meta);
+    }
 
     usleep(10000);
 	printf("Start recving\n");
