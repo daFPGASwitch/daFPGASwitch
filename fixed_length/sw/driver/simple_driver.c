@@ -1,15 +1,15 @@
-/* Device driver for the daFPGASwitch packet generator.
+/* Device driver for the simpleSwitch packet generator.
  *
  * A Platform device implemented using the misc subsystem
  *
  * Adapted from Stephen A. Edwards
- * Adapted by daFPGA
+ * Adapted by simple
  *
  * "make" to build
- * insmod da.ko
+ * insmod simple_driver.ko
  *
  * Check code style with
- * checkpatch.pl --file --no-tree da_driver.c
+ * checkpatch.pl --file --no-tree simple_driver.c
  */
 
 #include <linux/module.h>
@@ -27,53 +27,57 @@
 #include <linux/uaccess.h>
 #include <linux/types.h>
 
-#include "da_driver.h"
+#include "simple_driver.h"
 
-#define DRIVER_NAME "da_driver"
+#define DRIVER_NAME "simple_driver"
 
 /* Device registers */
-#define CTRL(x) (x) // Idle 0, sending 1, recv reset 2, 
-#define META_DATA_0(x) ((x)+4) // Metadata for port 0
-#define META_DATA_1(x) ((x)+8) // Metadata for port 1
-#define META_DATA_2(x) ((x)+12) // Metadata for port 2
-#define META_DATA_3(x) ((x)+16) // Metadata for port 3
+#define CTRL(x) ((packet_ctrl_t *)(x)) // Idle 0, sending 1, recv reset 2, 
+#define META_DATA_0(x) ((packet_meta_t *)(x)+1) // Metadata for port 0
+#define META_DATA_1(x) ((packet_meta_t *)(x)+2) // Metadata for port 1
+#define META_DATA_2(x) ((packet_meta_t *)(x)+3) // Metadata for port 2
+#define META_DATA_3(x) ((packet_meta_t *)(x)+4) // Metadata for port 3
 
 /*
  * Information about our device
  */
-struct da_driver_dev {
+struct simple_driver_dev {
 	struct resource res; /* Resource: our registers */
 	void __iomem *virtbase; /* Where registers can be accessed in memory */
     /* Some states of our device */
-    unsigned long ctrl_state;
-    unsigned long packet_data[4];
+    packet_ctrl_t ctrl_state;
+    packet_meta_t packet_data[4];
 } dev;
 
-static unsigned int extract_port(unsigned int value)
+static unsigned int extract_port(packet_meta_t meta)
 {
-    return value >> 30;
+    return meta >> 30;
 }
 
-static void write_packet_meta(pack_meta_t *meta)
+static void write_packet_meta(packet_meta_t *meta)
 {
     unsigned int src_port = extract_port(*meta);
     if (src_port > 3) {
         printk(KERN_ERR "Port numbers should be btwn 0 and 3");
     }
     switch (src_port) {
-        case 0: 
+        case 0:
+			printk(KERN_INFO "DAWRITE0 %u", *meta);
             iowrite32(*meta, META_DATA_0(dev.virtbase));
             dev.packet_data[0] = *meta;
             break;
         case 1:
+			printk(KERN_INFO "DAWRITE1 %u", *meta);
             iowrite32(*meta, META_DATA_1(dev.virtbase));
             dev.packet_data[1] = *meta;
             break;
         case 2:
+			printk(KERN_INFO "DAWRITE2 %u", *meta);
             iowrite32(*meta, META_DATA_2(dev.virtbase));
             dev.packet_data[2] = *meta;
             break;
         case 3:
+			printk(KERN_INFO "DAWRITE3 %u", *meta);
             iowrite32(*meta, META_DATA_3(dev.virtbase));
             dev.packet_data[3] = *meta;
             break;
@@ -93,19 +97,19 @@ static void write_packet_ctrl(packet_ctrl_t *ctrl)
  * Read or write the segments on single digits.
  * Note extensive error checking of arguments
  */
-static long da_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
+static long simple_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
 	packet_meta_t pm;
     packet_ctrl_t pc;
 
 	switch (cmd) {
-	case DA_WRITE_PACKET:
+	case SIMPLE_WRITE_PACKET:
 		if (copy_from_user(&pm, (packet_meta_t *) arg,
 				sizeof(packet_meta_t)))
 			return -EACCES;
 		write_packet_meta(&pm);
 		break;
-    case DA_WRITE_CTRL:
+    case SIMPLE_WRITE_CTRL:
 		if (copy_from_user(&pc, (packet_ctrl_t *) arg,
 				sizeof(packet_ctrl_t)))
 			return -EACCES;
@@ -114,33 +118,35 @@ static long da_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
     
     // TODO: Verify this
     // We need to READ OUT Whatever's available from the 4 egress
-    case DA_READ_PACKET_0:
-        pm = dev.packet_data[0];
+    case SIMPLE_READ_PACKET_0:
+        pm = ioread32(META_DATA_0(dev.virtbase));
+		printk(KERN_INFO "DAREAD0 %u", pm);
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
 		break;
-    case DA_READ_PACKET_1:
-        pm = dev.packet_data[1];
+    case SIMPLE_READ_PACKET_1:
+        pm = ioread32(META_DATA_1(dev.virtbase));
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
 		break;
-    case DA_READ_PACKET_2:
-        pm = dev.packet_data[2];
+    case SIMPLE_READ_PACKET_2:
+        pm = ioread32(META_DATA_2(dev.virtbase));
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
 		break;
-    case DA_READ_PACKET_3:
-        pm = dev.packet_data[3];
+    case SIMPLE_READ_PACKET_3:
+        pm = ioread32(META_DATA_3(dev.virtbase));
 		if (copy_to_user((packet_meta_t *) arg, &pm,
                 sizeof(packet_meta_t)))
 			return -EACCES;
 		break;
 
-	case DA_READ_CTRL:
-	  	pc = dev.ctrl_state;
+	case SIMPLE_READ_CTRL:
+	  	pc = ioread32(CTRL(dev.virtbase));
+		
 		if (copy_to_user((packet_ctrl_t *) arg, &pc,
 		        sizeof(packet_ctrl_t)))
 			return -EACCES;
@@ -153,30 +159,30 @@ static long da_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 }
 
 /* The operations our device knows how to do */
-static const struct file_operations da_fops = {
+static const struct file_operations simple_fops = {
 	.owner		= THIS_MODULE,
-	.unlocked_ioctl = da_ioctl,
+	.unlocked_ioctl = simple_ioctl,
 };
 
 /* Information about our device for the "misc" framework -- like a char dev */
-static struct miscdevice da_misc_device = {
+static struct miscdevice simple_misc_device = {
 	.minor		= MISC_DYNAMIC_MINOR,
 	.name		= DRIVER_NAME,
-	.fops		= &da_fops,
+	.fops		= &simple_fops,
 };
 
 /*
  * Initialization code: get resources (registers) and display
  * a welcome message
  */
-static int __init da_probe(struct platform_device *pdev)
+static int __init simple_probe(struct platform_device *pdev)
 {
-    pack_ctrl_t ctrl = 0;
+    packet_ctrl_t ctrl = 0;
 
 	int ret;
 
-	/* Register ourselves as a misc device: creates /dev/da_driver */
-	ret = misc_register(&da_misc_device);
+	/* Register ourselves as a misc device: creates /dev/simple_driver */
+	ret = misc_register(&simple_misc_device);
 
 	/* Get the address of our registers from the device tree */
 	ret = of_address_to_resource(pdev->dev.of_node, 0, &dev.res);
@@ -207,57 +213,57 @@ static int __init da_probe(struct platform_device *pdev)
 out_release_mem_region:
 	release_mem_region(dev.res.start, resource_size(&dev.res));
 out_deregister:
-	misc_deregister(&da_misc_device);
+	misc_deregister(&simple_misc_device);
 	return ret;
 }
 
 /* Clean-up code: release resources */
-static int da_remove(struct platform_device *pdev)
+static int simple_remove(struct platform_device *pdev)
 {
 	iounmap(dev.virtbase);
 	release_mem_region(dev.res.start, resource_size(&dev.res));
-	misc_deregister(&da_misc_device);
+	misc_deregister(&simple_misc_device);
 	return 0;
 }
 
 /* Which "compatible" string(s) to search for in the Device Tree */
 #ifdef CONFIG_OF
-static const struct of_device_id da_of_match[] = {
-	{ .compatible = "csee4840,da-1.0" },
+static const struct of_device_id simple_of_match[] = {
+	{ .compatible = "csee4840,simple_switch-1.0" },
 	{},
 };
-MODULE_DEVICE_TABLE(of, da_of_match);
+MODULE_DEVICE_TABLE(of, simple_of_match);
 #endif
 
 /* Information for registering ourselves as a "platform" driver */
-static struct platform_driver da_driver = {
+static struct platform_driver simple_driver = {
 	.driver	= {
 		.name	= DRIVER_NAME,
 		.owner	= THIS_MODULE,
-		.of_match_table = of_match_ptr(da_of_match),
+		.of_match_table = of_match_ptr(simple_of_match),
 	},
-	.remove	= __exit_p(da_remove),
+	.remove	= __exit_p(simple_remove),
 };
 
 /* Called when the module is loaded: set things up */
-static int __init da_init(void)
+static int __init simple_init(void)
 {
 	pr_info(DRIVER_NAME ": init\n");
     pr_info(DRIVER_NAME ": Size of packet_meta_t: %zu bytes\n", sizeof(packet_meta_t));
     pr_info(DRIVER_NAME ": Size of packet_ctrl_t: %zu bytes\n", sizeof(packet_ctrl_t));
-	return platform_driver_probe(&da_driver, da_probe);
+	return platform_driver_probe(&simple_driver, simple_probe);
 }
 
 /* Called when the module is unloaded: release resources */
-static void __exit da_exit(void)
+static void __exit simple_exit(void)
 {
-	platform_driver_unregister(&da_driver);
+	platform_driver_unregister(&simple_driver);
 	pr_info(DRIVER_NAME ": exit\n");
 }
 
-module_init(da_init);
-module_exit(da_exit);
+module_init(simple_init);
+module_exit(simple_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Teng Jiang tj2488");
-MODULE_DESCRIPTION("daFPGASwitch Packet Driver");
+MODULE_DESCRIPTION("simpleSwitch Packet Driver");
 

@@ -20,7 +20,7 @@
  */
 
 #include <stdio.h>
-#include "daFPGASwitch.h"
+#include "simpleSwitch.h"
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -30,28 +30,28 @@
 
 #define MIN_PORT_NUM 0
 #define MAX_PORT_NUM 3
-#define DEVICE_PATH "/dev/daFPGASwitch"
+#define DEVICE_PATH "/dev/simple_driver"
 
 
-int da_switch_fd;
+int simple_switch_fd;
 
 // High [2 bit src] [2 bit dst] [6 bits for the # of 32 byte chunks] [22 bit time stamp] Low
 // typedef unsigned int packet_meta_t;
 // typedef unsigned int packet_ctrl_t;
 // packet_info_t;
 
-void open_da_device()
+void open_simple_device()
 {
-    da_switch_fd = open(DEVICE_PATH, O_RDWR);
-    if (da_switch_fd < 0) {
-        perror("Failed to open da device");
+    simple_switch_fd = open(DEVICE_PATH, O_RDWR);
+    if (simple_switch_fd < 0) {
+        perror("Failed to open simple device");
         return;
     }
 }
 
 void print_packet_no_hw(void *packet_data)
 {
-	uint32_t packet = *((uint32_t*) packet_data);
+	unsigned int packet = *((unsigned int*) packet_data);
 	
     printf("\tmetadata (0x%X): [%u | %u | %u | %u]\n",
 		packet,
@@ -64,9 +64,9 @@ void print_packet_no_hw(void *packet_data)
 
 void print_packet(void *packet_data)
 {
-	uint32_t packet = *((uint32_t*) packet_data);
-    if (ioctl(da_switch_fd, DA_READ_PACKET_0, packet_data)) {
-        // perror("ioctl(DA_READ_PACKET_0) failed");
+	unsigned int packet = *((unsigned int*) packet_data);
+    if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_0, packet_data)) {
+        perror("ioctl(SIMPLE_READ_PACKET_0) failed");
         return;
     }
 
@@ -80,24 +80,25 @@ void print_packet(void *packet_data)
 
 void set_ctrl_register(const packet_ctrl_t *pkt_ctrl)
 {
-	if (ioctl(da_switch_fd, DA_WRITE_CTRL, pkt_ctrl) < 0) {
-        // perror("ioctl(DA_WRITE_CTRL) set CTRL=1 failed\n");
-        close(da_switch_fd);
+	if (ioctl(simple_switch_fd, SIMPLE_WRITE_CTRL, pkt_ctrl) < 0) {
+        perror("ioctl(SIMPLE_WRITE_CTRL) set CTRL=1 failed\n");
+        close(simple_switch_fd);
         return;
     }
 }
 
 void send_packet(const packet_meta_t *pkt_meta)
 {
-    if (ioctl(da_switch_fd, DA_WRITE_PACKET, pkt_meta) < 0) {
-        // perror("Failed to send packet");
+    sleep(0.5);
+    if (ioctl(simple_switch_fd, SIMPLE_WRITE_PACKET, pkt_meta) < 0) {
+        perror("Failed to send packet");
         return;
     }
 }
 
 // void receive_packet(int packet_id, packet_meta_t *pkt_meta)
 // {
-//     if (ioctl(da_switch_fd, cmd, pkt_meta) < 0) {
+//     if (ioctl(simple_switch_fd, cmd, pkt_meta) < 0) {
 //         perror("Failed to receive packet");
 //         return;
 //     }
@@ -112,77 +113,104 @@ void send_packet(const packet_meta_t *pkt_meta)
 void set_packet_length(packet_meta_t *pkt_meta, unsigned int length)
 {
 	if (length > 0x3F) {
-		// perror("Failed to set length or time_delta\n");
+		perror("Failed to set length\n");
 		return;
 	}
     // Mask and shift length @ bit pos [27:22]
     *pkt_meta |= (length & 0x3F) << 22;
-    // Mask and set time_delta @ bit pos [21:0]
-    // *pkt_meta |= (timestamp & 0x3FFFFF);
 }
 
 
-void set_all_packet_fields(packet_meta_t *pkt_meta, uint32_t dst, 
-						   			 uint32_t src, uint32_t length)
+void set_all_packet_fields(packet_meta_t *pkt_meta, unsigned int dst, 
+						   			 unsigned int src, unsigned int length)
 {
 	packet_meta_t pkt_tmp;
 	*pkt_meta = 0;
 
 	set_packet_length(pkt_meta, length);
 	*pkt_meta = set_dst_port(*pkt_meta, dst);
-	*pkt_meta = set_dst_port(*pkt_meta, src);
+	*pkt_meta = set_src_port(*pkt_meta, src);
 }
 
 
 int main()
 {
     int write_num_packets = 2, num_sent = 0;
-	uint32_t dest = 0, src = 0, len = 1, t_delta = 10;
+	unsigned int dest = 0, src = 0, len = 1, t_delta = 10;
     packet_meta_t pkt_meta, rcvd_pkt_meta;
     packet_ctrl_t pkt_ctrl;
 
-    open_da_device();
+    open_simple_device();
+
+	printf("Set CTRL register to 0\n");
+    pkt_ctrl = 0;
+	set_ctrl_register(&pkt_ctrl);
+	print_packet_no_hw(&pkt_ctrl);
 
     // Set control register (CTRL=1)
 	printf("Set CTRL register to 1\n");
     pkt_ctrl = 1;
 	set_ctrl_register(&pkt_ctrl);
+	print_packet_no_hw(&pkt_ctrl);
 
-	// dst=0, src=0, len=1, timestamp=10
-	printf("Sent %d packets to dst=%d, src=%d (length=%u)\n",
-			write_num_packets, dest, src, len);
-	set_all_packet_fields(&pkt_meta, dest, src, len);
-    for (int i = 0; i < write_num_packets; i++) {
+    for (int i = 0; i < 10; i++) {
+        set_all_packet_fields(&pkt_meta, i%2, i%4, 4);
 		send_packet(&pkt_meta);
 		print_packet_no_hw(&pkt_meta);
 	}
 	num_sent += write_num_packets;
 
 	len = 2;
-	printf("Sent %d packets to dst=%d, src=%d (length=%u)\n",
-			write_num_packets, dest, src, len);
-	set_all_packet_fields(&pkt_meta, dest, src, len);
-	print_packet_no_hw(&pkt_meta);
-    for (int i = 0; i < write_num_packets; i++)
+
+	set_all_packet_fields(&pkt_meta, 0, 4, 4);
+    for (int i = 0; i < 10; i++)
+        set_all_packet_fields(&pkt_meta, i%4, (i+1)%4, 4);
         send_packet(&pkt_meta);
+		print_packet_no_hw(&pkt_meta);
 	num_sent += write_num_packets;
 
-    // Change control register to reading/writing (CTRL=2)
 	printf("Set CTRL register to 2\n");
 	pkt_ctrl = 2;
 	set_ctrl_register(&pkt_ctrl);
+	print_packet_no_hw(&pkt_ctrl);
 
 	printf("Requested %d packets\n", num_sent);
-	for (int i = 0; i < num_sent; i++) {
-    	if (ioctl(da_switch_fd, DA_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
-			// perror("ioctl read packet failed");
-			close(da_switch_fd);
+	for (int i = 0; i < 5; i++) {
+    	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_0, &rcvd_pkt_meta) < 0) {
+			perror("ioctl read packet failed");
+			close(simple_switch_fd);
 			return -1;
 		}
-		print_packet(&rcvd_pkt_meta);
+        sleep(0.5);
+        printf("Port 0\n");
+		print_packet_no_hw(&rcvd_pkt_meta);
+            	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_1, &rcvd_pkt_meta) < 0) {
+			perror("ioctl read packet failed");
+			close(simple_switch_fd);
+			return -1;
+		}
+        sleep(0.5);
+        printf("Port 1\n");
+		print_packet_no_hw(&rcvd_pkt_meta);
+            	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_2, &rcvd_pkt_meta) < 0) {
+			perror("ioctl read packet failed");
+			close(simple_switch_fd);
+			return -1;
+		}
+        sleep(0.5);
+        printf("Port 2\n");
+		print_packet_no_hw(&rcvd_pkt_meta);
+            	if (ioctl(simple_switch_fd, SIMPLE_READ_PACKET_3, &rcvd_pkt_meta) < 0) {
+			perror("ioctl read packet failed");
+			close(simple_switch_fd);
+			return -1;
+		}
+		sleep(0.5);
+        printf("Port 3\n");
+		print_packet_no_hw(&rcvd_pkt_meta);
 	}
 
-    close(da_switch_fd);
-	printf("Da userspace program terminating\n");
+    close(simple_switch_fd);
+	printf("Userspace program terminating\n");
 	return 0;
 }

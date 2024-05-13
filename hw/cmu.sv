@@ -21,10 +21,11 @@ Address 2: 1, 0000000000
 module cmu (
     input logic clk,
     input logic [5:0] remaining_packet_length, // in blocks
-    input logic wen, free_en,
-    input logic [9:0] raddr, 
-    output logic [9:0] packet_addr = 10'b0, // the address in cmem for the first chunk of the packet
-	output logic [9:0] next_read = 10'b0
+    input logic alloc_en, free_en,
+    input logic [9:0] free_addr, 
+
+    output logic [9:0] alloc_addr = 10'b0, // the address in cmem for the first chunk of the packet
+	output logic [9:0] next_free_addr = 10'b0
 );
 	
 	
@@ -50,7 +51,7 @@ module cmu (
 	logic[9:0]	addr_a, addr_b;
 	
     always @(posedge clk) begin
-		if (wen) begin
+		if (alloc_en) begin
 			if (remaining_packet_length < empty_blocks) begin
 				new_block <= 1'b1;
 				empty_blocks <= empty_blocks - 1;
@@ -113,17 +114,17 @@ module cmu (
 		if (free_en) begin
 			ctrl_wen_b 		<=	1'b1; 		    
 			empty_blocks	<=	empty_blocks + 1;
-			next_write		<=  raddr;
+			next_write		<=  free_addr;
 		end
 
 		if (ctrl_wen_b == 1'b1) begin
 			ctrl_wen_b	<=	1'b0;
 		end
 
-		packet_addr		<=	curr_write;
-		next_read		<=  ctrl_out_b[9:0];
+		alloc_addr		<=	curr_write;
+		next_free_addr		<=  ctrl_out_b[9:0];
 		ctrl_in_b		<= 	{1'b0, next_write};	
-		addr_b	 		<= 	raddr;
+		addr_b	 		<= 	free_addr;
     end
 
     true_dual_port_mem #(.MEM_SIZE(1024), .DATA_WIDTH(`D_WIDTH)) cmem

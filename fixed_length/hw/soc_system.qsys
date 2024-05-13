@@ -17,19 +17,19 @@
          type = "int";
       }
    }
-   element da_fpga_switch_0
-   {
-      datum _sortIndex
-      {
-         value = "2";
-         type = "int";
-      }
-   }
    element hps_0
    {
       datum _sortIndex
       {
          value = "1";
+         type = "int";
+      }
+   }
+   element simple_switch_0
+   {
+      datum _sortIndex
+      {
+         value = "2";
          type = "int";
       }
    }
@@ -64,11 +64,6 @@
   <parameter name="inputClockFrequency" value="0" />
   <parameter name="resetSynchronousEdges" value="NONE" />
  </module>
- <module
-   name="da_fpga_switch_0"
-   kind="da_fpga_switch"
-   version="1.0"
-   enabled="1" />
  <module name="hps_0" kind="altera_hps" version="21.1" enabled="1">
   <parameter name="ABSTRACT_REAL_COMPARE_TEST" value="false" />
   <parameter name="ABS_RAM_MEM_INIT_FILENAME" value="meminit" />
@@ -599,11 +594,12 @@
   <parameter name="usb_mp_clk_div" value="0" />
   <parameter name="use_default_mpu_clk" value="true" />
  </module>
+ <module name="simple_switch_0" kind="simple_switch" version="1.0" enabled="1" />
  <connection
    kind="avalon"
    version="21.1"
    start="hps_0.h2f_lw_axi_master"
-   end="da_fpga_switch_0.avalon_slave_0">
+   end="simple_switch_0.avalon_slave_0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
@@ -612,7 +608,7 @@
    kind="clock"
    version="21.1"
    start="clk_0.clk"
-   end="da_fpga_switch_0.clock" />
+   end="simple_switch_0.clock" />
  <connection
    kind="clock"
    version="21.1"
@@ -632,7 +628,7 @@
    kind="reset"
    version="21.1"
    start="clk_0.clk_reset"
-   end="da_fpga_switch_0.reset" />
+   end="simple_switch_0.reset" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.enableEccProtection" value="FALSE" />
  <interconnectRequirement for="$system" name="qsys_mm.insertDefaultSlave" value="FALSE" />

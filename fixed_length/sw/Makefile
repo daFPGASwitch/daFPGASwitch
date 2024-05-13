@@ -1,26 +1,26 @@
 ifneq (${KERNELRELEASE},)
 
 # KERNELRELEASE defined: we are being compiled as part of the Kernel
-	obj-m := da_driver.o
+	obj-m := simple_driver.o
 else
 
 # Compile the driver as a linux kernel module
 KERNEL_SOURCE := /usr/src/linux-headers-$(shell uname -r)
 PWD := $(shell pwd)/driver
 
-default: clean module daFPGASwitch
+default: clean module simpleSwitch
 
 module:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} modules
 
 
-daFPGASwitch.o:
-	cc -c daFPGASwitch.c
+simpleSwitch.o:
+	cc -c simpleSwitch.c
 
-daFPGASwitch: daFPGASwitch.o
-	cc -o daFPGASwitch daFPGASwitch.o
+simpleSwitch: simpleSwitch.o
+	cc -o simpleSwitch simpleSwitch.o
 
 clean:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} clean
-	${RM} daFPGASwitch daFPGASwitch.o
+	${RM} simpleSwitch simpleSwitch.o
 endif
